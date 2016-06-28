@@ -8,5 +8,12 @@
             "name": "Armin Preiml",
             "email": "apreiml@strohwolke.at"
         }
-    ]
+    ],
+
+    "autoload": {
+        "psr-0": {
+            "Symvaro\\ArtisanLangUtils\\": "src/"
+        }
+    }
+
 }

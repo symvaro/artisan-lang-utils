@@ -1,0 +1,12 @@
+{
+    "name": "symvaro/artisan-lang-utils",
+    "require": {
+        "laravel/framework": "5.2.*"
+    },
+    "authors": [
+        {
+            "name": "Armin Preiml",
+            "email": "apreiml@strohwolke.at"
+        }
+    ]
+}

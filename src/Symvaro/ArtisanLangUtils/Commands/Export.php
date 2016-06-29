@@ -5,20 +5,23 @@ namespace Symvaro\ArtisanLangUtils\Commands;
 use App;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Arr;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
 
 class Export extends Command
 {
     protected $signature =
-        'lang:export {out} 
-        {--f|format= : Export format. Default po or pot if no language is specified}
+        'lang:export 
+        {output : File or directory} 
         {--l|lang= : Language key to export.}';
 
-    protected $description = 'Export resources into lang files';
+    // {--f|format= : Export format. Default po or pot if no language is specified}
+    
+    protected $description = 'Export language resources into common lang file formats';
 
     private $writer;
     private $filesystem;
-
+    
     public function handle()
     {
         if ($this->option('lang') == null) {
@@ -35,10 +38,18 @@ class Export extends Command
 
             return;
         }
+        
+        $this->filesystem = new Filesystem();
+        
+        $outfile = $this->getOutFilename();
+
+        $this->comment("Export translations to '$outfile'");       
 
         $this->writer = new POWriter();
-        $this->filesystem = new Filesystem();
-        $this->exportLanguage();
+        $this->writer->open($outfile);
+        $this->exportTranslations();
+        $this->writer->close();
+        
     }
 
     private function validateLanguagePath()
@@ -64,37 +75,57 @@ class Export extends Command
         return realpath(App::langPath() . '/' . $language);
     }
 
-    private function exportLanguage($workingDir = '')
+    private function getOutFilename()
     {
-        dump("export : ");
+        $output = $this->argument('output');
+
+        if ($this->filesystem->isFile($output)) {
+            return $output;
+        }
+
+        if (!$this->filesystem->isDirectory($output)) {
+            return null;
+        }
+
+        if (substr($output, -1) !== '/') {
+            $output .= '/';
+        }
+        
+        return $output . 'app_' . $this->option('lang') . '.po';
+    }
+
+    private function exportTranslations($workingDir = '')
+    {
         $path = $this->getLangPath();
         
         if ($workingDir !== '') {
-            $path .= '/' . $workingDir;
+            $path .= $workingDir;
         }
-
+        
         foreach ($this->filesystem->files($path) as $file) {
             $relativeFile = substr($file, strlen($path));
             
             $this->writeStringsOfFile($path, $relativeFile, $workingDir);
         }
         
+        foreach ($this->filesystem->directories($path) as $dir) {
+            $relativePath = substr($dir, strlen($path));
+
+            $this->exportTranslations($relativePath);
+        }
     }
     
     private function writeStringsOfFile($dir, $file, $workingDir) 
     {
         $keyPrefix = $workingDir;
         
-        if ($keyPrefix !== '') {
-            $keyPrefix .= '/';
-        }
-
         $keyPrefix .= substr($file, 0, strlen($file) - strlen('.php'));
-        $keyPrefix .= '/';
+        $keyPrefix .= '.';
         
         $langKeys = $this->filesystem->getRequire($dir . $file);
         
-        dump([$dir, $file, $keyPrefix]);
-        dump($langKeys);
+        foreach (Arr::dot($langKeys) as $key => $value) {
+            $this->writer->write($keyPrefix . $key, $value);
+        }
     }
 }

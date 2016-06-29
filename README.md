@@ -7,7 +7,7 @@ In composer.json add the following to repositories:
 ```
     "repositories": [{ 
         "type": "vcs", 
-        "url":  "git@git.symvaro.com:arminpreiml/artisan-lang-utils.git" 
+        "url":  "git@git.symvaro.com:dev/artisan-lang-utils.git" 
     }]
 ```
 

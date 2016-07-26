@@ -6,6 +6,7 @@ use App;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
+use Symvaro\ArtisanLangUtils\Readers\ResourceReader;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
 
 class Export extends Command
@@ -94,38 +95,21 @@ class Export extends Command
         return $output . 'app_' . $this->option('lang') . '.po';
     }
 
-    private function exportTranslations($workingDir = '')
+    private function exportTranslations()
     {
         $path = $this->getLangPath();
-        
-        if ($workingDir !== '') {
-            $path .= $workingDir;
-        }
-        
-        foreach ($this->filesystem->files($path) as $file) {
-            $relativeFile = substr($file, strlen($path));
-            
-            $this->writeStringsOfFile($path, $relativeFile, $workingDir);
-        }
-        
-        foreach ($this->filesystem->directories($path) as $dir) {
-            $relativePath = substr($dir, strlen($path));
 
-            $this->exportTranslations($relativePath);
-        }
-    }
-    
-    private function writeStringsOfFile($dir, $file, $workingDir) 
-    {
-        $keyPrefix = $workingDir;
-        
-        $keyPrefix .= substr($file, 0, strlen($file) - strlen('.php'));
-        $keyPrefix .= '.';
-        
-        $langKeys = $this->filesystem->getRequire($dir . $file);
-        
-        foreach (Arr::dot($langKeys) as $key => $value) {
-            $this->writer->write($keyPrefix . $key, $value);
+        $reader = new ResourceReader();
+        $reader->open($path);
+
+        while (true) {
+            $next = $reader->next();
+
+            if ($next === null) {
+                break;
+            }
+
+            $this->writer->write($next->getKey(), $next->getMessage());
         }
     }
 }

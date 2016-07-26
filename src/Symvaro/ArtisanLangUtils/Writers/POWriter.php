@@ -2,15 +2,8 @@
 
 namespace Symvaro\ArtisanLangUtils\Writers;
 
-class POWriter implements WriterContract
+class POWriter extends Writer
 {
-    private $handle;
-
-    function open($uri)
-    {
-        $this->handle = fopen($uri, 'w');
-    }
-
     function write($key, $message = "")
     {
         $message = str_replace('"', '\\"', $message);
@@ -21,10 +14,5 @@ class POWriter implements WriterContract
             "msgid \"$key\"\n" .
             "msgstr \"$message\"\n"
         );
-    }
-
-    function close()
-    {
-        fclose($this->handle);
     }
 }

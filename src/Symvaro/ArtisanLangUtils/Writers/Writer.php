@@ -2,19 +2,16 @@
 
 namespace Symvaro\ArtisanLangUtils\Writers;
 
+use Symvaro\ArtisanLangUtils\Entry;
+
 abstract class Writer
 {
-    protected $handle;
+    public abstract function open($uri);
 
-    function open($uri)
-    {
-        $this->handle = fopen($uri, 'w');
-    }
+    public abstract function write(Entry $entry);
 
-    public abstract function write($key, $message = "");
-    
-    function close()
+    public function close()
     {
-        fclose($this->handle);
+        //
     }
 }

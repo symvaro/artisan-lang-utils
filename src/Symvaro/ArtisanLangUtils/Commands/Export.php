@@ -109,7 +109,7 @@ class Export extends Command
                 break;
             }
 
-            $this->writer->write($next->getKey(), $next->getMessage());
+            $this->writer->write($next);
         }
     }
 }

@@ -2,17 +2,33 @@
 
 namespace Symvaro\ArtisanLangUtils\Writers;
 
+use Symvaro\ArtisanLangUtils\Entry;
+
 class POWriter extends Writer
 {
-    function write($key, $message = "")
+    private $handle;
+
+    function open($uri)
     {
-        $message = str_replace('"', '\\"', $message);
+        $this->handle = fopen($uri, 'w');
+    }
+
+    function write(Entry $entry)
+    {
+        $message = str_replace('"', '\\"', $entry->getMessage());
+
+        $message = str_replace("\n", "\\n\"\n\"", $message);
 
         fputs(
             $this->handle,
             "\n" .
-            "msgid \"$key\"\n" .
+            "msgid \"{$entry->getKey()}\"\n" .
             "msgstr \"$message\"\n"
         );
+    }
+
+    function close()
+    {
+        fclose($this->handle);
     }
 }

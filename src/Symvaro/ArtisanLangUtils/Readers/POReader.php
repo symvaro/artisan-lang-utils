@@ -10,6 +10,8 @@ class POReader implements Reader
 
     private $line;
     private $col;
+
+    private $prevChar;
     private $char;
 
     private $entryKey, $entryValue;
@@ -32,6 +34,7 @@ class POReader implements Reader
     {
         $this->line = fgets($this->handle);
         $this->col = 0;
+        $this->char = "\n";
         $this->nextChar();
     }
 
@@ -134,11 +137,18 @@ class POReader implements Reader
             $string .= $line;
         }
 
+        $string = str_replace('\"', "\"", $string);
+        $string = str_replace('\n', "\n", $string);
+
         return $string;
     }
 
     private function stringLine()
     {
+        if ($this->isEof()) {
+            return null;
+        }
+
         $string = '';
 
         if ($this->char == ' ') {
@@ -149,7 +159,13 @@ class POReader implements Reader
             return null;
         }
 
-        while ($this->nextChar() !== '"') {
+        while (true) {
+            $this->nextChar();
+
+            if ($this->char === '"' && $this->prevChar !== '\\') {
+                break;
+            }
+
             $string .= $this->char;
         }
 
@@ -158,6 +174,8 @@ class POReader implements Reader
 
     private function nextChar()
     {
+        $this->prevChar = $this->char;
+
         if ($this->line === false) {
             return false;
         }

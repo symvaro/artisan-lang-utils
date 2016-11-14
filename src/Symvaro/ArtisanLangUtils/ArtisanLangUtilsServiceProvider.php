@@ -7,7 +7,8 @@ class ArtisanLangUtilsServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->commands('Symvaro\ArtisanLangUtils\Commands\Export');
+        $this->commands(\Symvaro\ArtisanLangUtils\Commands\Export::class);
+        $this->commands(\Symvaro\ArtisanLangUtils\Commands\ListEntries::class);
     }
 }
 

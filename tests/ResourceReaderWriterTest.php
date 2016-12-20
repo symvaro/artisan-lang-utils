@@ -38,7 +38,6 @@ class ResourceReaderWriterTest extends TestCase
         $faker = Factory::create();
         $tmpDirName = sys_get_temp_dir() . '/lang_test_' . $faker->uuid;
 
-        dump($tmpDirName);
         mkdir($tmpDirName);
 
         $r = new ResourceReader();

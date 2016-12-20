@@ -1,8 +1,12 @@
+/common.a,A
 /common.hello,Hallo
 /common.errors.500,Serverfehler
 /common.errors.404,"Nicht gefunden"
 /common.errors.others.1,Eins
 /common.errors.others.2,Zwei
+/common.errors.pyramid,Pyramide
+/common.x,X
 /special.youare,"du bist"
 /special.special-chars,"Das ""Anführungszeichen"", in 'zwei' Varianten"
+/nesting.a.b.c.d,x
 /subdir/subfile.subcontent,Subkontinent

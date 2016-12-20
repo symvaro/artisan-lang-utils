@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'a' => 'A',
     'hello' => 'Hallo',
 
     'errors' => [
@@ -9,6 +10,9 @@ return [
         'others' => [
             '1' => 'Eins',
             '2' => 'Zwei',
-        ]
-    ]
+        ],
+        'pyramid' => 'Pyramide',
+    ],
+
+    'x' => 'X',
 ];

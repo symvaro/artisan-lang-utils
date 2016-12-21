@@ -19,7 +19,7 @@ class ListEntries extends Command
 
         $reader->open($this->argument('file'));
 
-        while (($next = $reader->next()) !== null) {
+        while (($next = $reader->nextEntry()) !== null) {
             echo "$next\n";
         }
 

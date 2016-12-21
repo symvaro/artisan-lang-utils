@@ -103,7 +103,7 @@ class Export extends Command
         $reader->open($path);
 
         while (true) {
-            $next = $reader->next();
+            $next = $reader->nextEntry();
 
             if ($next === null) {
                 break;

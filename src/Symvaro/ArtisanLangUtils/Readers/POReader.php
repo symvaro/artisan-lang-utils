@@ -4,7 +4,7 @@ namespace Symvaro\ArtisanLangUtils\Readers;
 
 use Symvaro\ArtisanLangUtils\Entry;
 
-class POReader implements Reader
+class POReader extends Reader
 {
     private $handle;
 
@@ -16,12 +16,20 @@ class POReader implements Reader
 
     private $entryKey, $entryValue;
 
-    public function open($uri)
+    public function __construct($uri)
     {
         $this->handle = fopen($uri, 'r');
 
         $this->readLine();
     }
+
+    protected function reset()
+    {
+        rewind($this->handle);
+
+        $this->readLine();
+    }
+
 
     public function close()
     {
@@ -46,7 +54,7 @@ class POReader implements Reader
     /**
      * @return \Symvaro\ArtisanLangUtils\Entry | null
      */
-    public function next()
+    protected function nextEntry()
     {
         $this->entryKey = null;
         $this->entryValue = null;

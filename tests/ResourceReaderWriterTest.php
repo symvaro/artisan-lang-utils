@@ -4,6 +4,7 @@ namespace Tests;
 
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
+use Symvaro\ArtisanLangUtils\Entry;
 use Symvaro\ArtisanLangUtils\Readers\ResourceReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
@@ -13,20 +14,12 @@ class ResourceReaderWriterTest extends TestCase
 
     public function testRead()
     {
-        $r = new ResourceReader();
-
-        $r->open(__DIR__ . '/resources/lang/de');
+        $r = new ResourceReader(__DIR__ . '/resources/lang/de');
 
         $tmp = tmpfile();
 
-        while (true) {
-            $next = $r->next();
-
-            if ($next === null) {
-                break;
-            }
-
-            fputcsv($tmp, [$next->getKey(), $next->getMessage()]);
+        foreach ($r as $key => $message) {
+            fputcsv($tmp, [$key, $message]);
         }
 
         rewind($tmp);
@@ -40,27 +33,20 @@ class ResourceReaderWriterTest extends TestCase
 
         mkdir($tmpDirName);
 
-        $r = new ResourceReader();
-        $w = new ResourceWriter();
-
         $sourceUri = __DIR__ . '/resources/lang/de';
 
-        $r->open($sourceUri);
+        $r = new ResourceReader($sourceUri);
+        $w = new ResourceWriter();
+
         $w->open($tmpDirName);
 
-        while (true) {
-            $next = $r->next();
-
-            if ($next === null) {
-                break;
-            }
-
-            $w->write($next);
-        }
+        $w->writeAll($r);
 
         $w->close();
         $r->close();
 
-        $this->assertReaderFilesEquals($sourceUri, ResourceReader::class, $tmpDirName, ResourceReader::class);
+        $this->assertReaderEquals(new ResourceReader($sourceUri), new ResourceReader($tmpDirName));
+
+        dump((new ResourceReader($sourceUri))->readAll()->toArray());
     }
 }

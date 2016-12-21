@@ -8,7 +8,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Symvaro\ArtisanLangUtils\Entry;
 
-class ResourceReader implements Reader
+class ResourceReader extends Reader
 {
     private $langDirPath;
 
@@ -20,13 +20,10 @@ class ResourceReader implements Reader
 
     private $entries;
 
-    public function __construct()
+    public function __construct($uri)
     {
         $this->filesystem = new Filesystem();
-    }
 
-    public function open($uri)
-    {
         if (!$this->filesystem->isDirectory($uri)) {
             throw new Exception('please specify the resource lang dir');
         }
@@ -39,8 +36,12 @@ class ResourceReader implements Reader
         $this->loadNextFile();
     }
 
-    public function close()
+    protected function reset()
     {
+        $this->files = $this->filesystem->allFiles($this->langDirPath);
+        $this->currentFilePos = 0;
+
+        $this->loadNextFile();
     }
 
     private function loadNextFile()
@@ -69,7 +70,7 @@ class ResourceReader implements Reader
     /**
      * @return \Symvaro\ArtisanLangUtils\Entry | null
      */
-    public function next()
+    protected function nextEntry()
     {
         if ($this->entries === null) {
             return null;
@@ -78,7 +79,7 @@ class ResourceReader implements Reader
         if (!$this->entries->valid()) {
             $this->loadNextFile();
 
-            return $this->next();
+            return $this->nextEntry();
         }
 
         $entry = new Entry($this->currentFilePrefix . '.' . $this->entries->key(), $this->entries->current());

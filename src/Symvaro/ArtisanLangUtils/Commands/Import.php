@@ -16,16 +16,14 @@ class Import extends Command
 
     public function handle()
     {
-        $reader = new POReader();
+        $reader = new POReader($this->argument('file'));
         $writer = new ResourceWriter();
-
-        $reader->open($this->argument('file'));
 
         $path = rtrim($this->argument('lang_path'), '/');
 
         $writer->open($path);
 
-        while (($next = $reader->next()) !== null) {
+        while (($next = $reader->nextEntry()) !== null) {
             $writer->write($next);
         }
 

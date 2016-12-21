@@ -6,13 +6,18 @@ namespace Symvaro\ArtisanLangUtils\Readers;
 
 use Symvaro\ArtisanLangUtils\Entry;
 
-class CsvReader implements Reader
+class CsvReader extends Reader
 {
     private $handle;
 
-    public function open($uri)
+    public function __construct($uri)
     {
         $this->handle = fopen($uri, 'r');
+    }
+
+    protected function reset()
+    {
+        rewind($this->handle);
     }
 
     public function close()
@@ -23,7 +28,7 @@ class CsvReader implements Reader
     /**
      * @return \Symvaro\ArtisanLangUtils\Entry | null
      */
-    public function next()
+    protected function nextEntry()
     {
         $next = fgetcsv($this->handle);
 

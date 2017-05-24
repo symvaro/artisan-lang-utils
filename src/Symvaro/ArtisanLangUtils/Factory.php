@@ -4,8 +4,10 @@
 namespace Symvaro\ArtisanLangUtils;
 
 
+use Symvaro\ArtisanLangUtils\Readers\POReader;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
+use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 class Factory
 {
@@ -13,6 +15,16 @@ class Factory
     {
         $class = [
             'po' => POWriter::class,
+            'resource' => ResourceWriter::class
+        ][self::extractKind($config)];
+
+        return new $class(self::extractValue($config));
+    }
+
+    public static function createReader($config)
+    {
+        $class = [
+            'po' => POReader::class,
             'resource' => ResourceDirReader::class
         ][self::extractKind($config)];
 

@@ -25,6 +25,10 @@ class ResourceDirReader extends Reader
         $this->filesystem = new Filesystem();
 
         if (!$this->filesystem->isDirectory($uri)) {
+            $uri = resource_path('lang/' . $uri);
+        }
+
+        if (!$this->filesystem->isDirectory($uri)) {
             throw new Exception('please specify the resource lang dir');
         }
 

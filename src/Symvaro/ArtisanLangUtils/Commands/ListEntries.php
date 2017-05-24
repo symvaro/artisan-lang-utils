@@ -4,23 +4,28 @@
 namespace Symvaro\ArtisanLangUtils\Commands;
 
 use Illuminate\Console\Command;
+use Symvaro\ArtisanLangUtils\Factory;
 use Symvaro\ArtisanLangUtils\Readers\POReader;
 
 class ListEntries extends Command
 {
     protected $signature =
-        'lang:list {file}';
+        'lang:list {input}';
 
     protected $description = 'List all entries of a .po language file.';
 
     public function handle()
     {
-        $reader = new POReader();
+        $reader = Factory::createReader($this->argument('input'));
 
-        $reader->open($this->argument('file'));
+        $reader->rewind();
 
-        while (($next = $reader->nextEntry()) !== null) {
+        while($reader->valid()) {
+            $next = $reader->currentEntry();
+
             echo "$next\n";
+
+            $reader->next();
         }
 
         $reader->close();

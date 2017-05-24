@@ -10,3 +10,5 @@
 /special.special-chars,"Das ""Anführungszeichen"", in 'zwei' Varianten"
 /nesting.a.b.c.d,x
 /subdir/subfile.subcontent,Subkontinent
+/small.one,Eins
+/small.two.half,Zwei-ein-halb

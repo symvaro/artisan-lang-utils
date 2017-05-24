@@ -5,16 +5,27 @@ namespace Tests;
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
 use Symvaro\ArtisanLangUtils\Entry;
-use Symvaro\ArtisanLangUtils\Readers\ResourceReader;
+use Symvaro\ArtisanLangUtils\Readers\ResourceFileReader;
+use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 class ResourceReaderWriterTest extends TestCase
 {
     use ReaderTestUtils;
 
+    public function testResourceFileReader()
+    {
+        $r = new ResourceFileReader(__DIR__ . '/resources/lang/de/small.php');
+
+        $this->assertEquals([
+            'one' => 'Eins',
+            'two.half' => 'Zwei-ein-halb'
+        ], $r->readAll()->all());
+    }
+
     public function testRead()
     {
-        $r = new ResourceReader(__DIR__ . '/resources/lang/de');
+        $r = new ResourceDirReader(__DIR__ . '/resources/lang/de');
 
         $tmp = tmpfile();
 
@@ -35,7 +46,7 @@ class ResourceReaderWriterTest extends TestCase
 
         $sourceUri = __DIR__ . '/resources/lang/de';
 
-        $r = new ResourceReader($sourceUri);
+        $r = new ResourceDirReader($sourceUri);
         $w = new ResourceWriter();
 
         $w->open($tmpDirName);
@@ -45,8 +56,8 @@ class ResourceReaderWriterTest extends TestCase
         $w->close();
         $r->close();
 
-        $this->assertReaderEquals(new ResourceReader($sourceUri), new ResourceReader($tmpDirName));
+        $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName));
 
-        dump((new ResourceReader($sourceUri))->readAll()->toArray());
+        dump((new ResourceDirReader($sourceUri))->readAll()->toArray());
     }
 }

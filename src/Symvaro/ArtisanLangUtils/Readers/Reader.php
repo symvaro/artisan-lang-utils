@@ -12,7 +12,7 @@ abstract class Reader implements Iterator
     public function close() {}
 
     public function readAll() {
-        return new StringCollection(iterator_to_array($this));
+        return collect(iterator_to_array($this));
     }
 
 

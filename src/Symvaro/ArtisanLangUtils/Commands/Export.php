@@ -6,7 +6,7 @@ use App;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
-use Symvaro\ArtisanLangUtils\Readers\ResourceReader;
+use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
 
 class Export extends Command
@@ -99,7 +99,7 @@ class Export extends Command
     {
         $path = $this->getLangPath();
 
-        $reader = new ResourceReader();
+        $reader = new ResourceDirReader();
         $reader->open($path);
 
         while (true) {

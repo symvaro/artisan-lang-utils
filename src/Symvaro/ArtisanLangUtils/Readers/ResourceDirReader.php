@@ -8,7 +8,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Symvaro\ArtisanLangUtils\Entry;
 
-class ResourceReader extends Reader
+class ResourceDirReader extends Reader
 {
     private $langDirPath;
 
@@ -18,7 +18,7 @@ class ResourceReader extends Reader
     private $currentFilePos;
     private $currentFilePrefix;
 
-    private $entries;
+    private $currentFileReader;
 
     public function __construct($uri)
     {
@@ -30,10 +30,7 @@ class ResourceReader extends Reader
 
         $this->langDirPath = $uri;
 
-        $this->files = $this->filesystem->allFiles($uri);
-        $this->currentFilePos = 0;
-
-        $this->loadNextFile();
+        $this->reset();
     }
 
     protected function reset()
@@ -47,15 +44,15 @@ class ResourceReader extends Reader
     private function loadNextFile()
     {
         if (!isset($this->files[$this->currentFilePos])) {
-            $this->entries = null;
+            $this->currentFileReader = null;
             return;
         }
 
         $nextFilePath = $this->files[$this->currentFilePos]->getRealPath();
-        $fileContents = $this->filesystem->getRequire($nextFilePath);
 
-        $this->entries = Collection::make(Arr::dot($fileContents))->getIterator();
-        $this->entries->rewind();
+        $this->currentFileReader = new ResourceFileReader($nextFilePath);
+        $this->currentFileReader->rewind();
+
 
         $langDirPathStrlen = strlen($this->langDirPath);
 
@@ -72,19 +69,19 @@ class ResourceReader extends Reader
      */
     protected function nextEntry()
     {
-        if ($this->entries === null) {
+        if ($this->currentFileReader === null) {
             return null;
         }
 
-        if (!$this->entries->valid()) {
+        if (!$this->currentFileReader->valid()) {
             $this->loadNextFile();
 
             return $this->nextEntry();
         }
 
-        $entry = new Entry($this->currentFilePrefix . '.' . $this->entries->key(), $this->entries->current());
+        $entry = new Entry($this->currentFilePrefix . '.' . $this->currentFileReader->key(), $this->currentFileReader->current());
 
-        $this->entries->next();
+        $this->currentFileReader->next();
 
         return $entry;
     }

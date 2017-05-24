@@ -7,6 +7,11 @@ use Symvaro\ArtisanLangUtils\StringCollection;
 
 abstract class Writer
 {
+    public function __construct($uri)
+    {
+        $this->open($uri);
+    }
+
     public abstract function open($uri);
 
     public abstract function write(Entry $entry);

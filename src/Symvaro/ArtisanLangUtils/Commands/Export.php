@@ -6,6 +6,7 @@ use App;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
+use Symvaro\ArtisanLangUtils\Factory;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
 
@@ -13,11 +14,9 @@ class Export extends Command
 {
     protected $signature =
         'lang:export 
-        {output : File or directory} 
-        {--l|lang= : Language key to export.}';
+        {language : Language in lang resource directory}
+        {output : File resource like "po:lang.po"}';
 
-    // {--f|format= : Export format. Default po or pot if no language is specified}
-    
     protected $description = 'Export language resources into common lang file formats';
 
     private $writer;
@@ -25,32 +24,20 @@ class Export extends Command
     
     public function handle()
     {
-        if ($this->option('lang') == null) {
-            $this->comment('NOT SUPPORTED YET: Please select a language');
-
-            return;
-        }
-
         if (!$this->validateLanguagePath()) {
             $this->comment('Could not find given language resource directory: "' .
-                App::langPath() . '/' . $this->option('lang')
+                App::langPath() . '/' . $this->argument('language')
                 . '"'
             );
 
             return;
         }
-        
-        $this->filesystem = new Filesystem();
-        
-        $outfile = $this->getOutFilename();
 
-        $this->comment("Export translations to '$outfile'");       
+        $this->writer = Factory::createWriter($this->argument('output'));
 
-        $this->writer = new POWriter();
-        $this->writer->open($outfile);
         $this->exportTranslations();
+
         $this->writer->close();
-        
     }
 
     private function validateLanguagePath()
@@ -67,7 +54,7 @@ class Export extends Command
 
     private function getLangPath()
     {
-        $language = $this->option('lang');
+        $language = $this->argument('language');
 
         if ($language == null) {
             return false;
@@ -76,40 +63,17 @@ class Export extends Command
         return realpath(App::langPath() . '/' . $language);
     }
 
-    private function getOutFilename()
-    {
-        $output = $this->argument('output');
-
-        if ($this->filesystem->isFile($output)) {
-            return $output;
-        }
-
-        if (!$this->filesystem->isDirectory($output)) {
-            return null;
-        }
-
-        if (substr($output, -1) !== '/') {
-            $output .= '/';
-        }
-        
-        return $output . 'app_' . $this->option('lang') . '.po';
-    }
-
     private function exportTranslations()
     {
         $path = $this->getLangPath();
 
-        $reader = new ResourceDirReader();
-        $reader->open($path);
+        $reader = new ResourceDirReader($path);
+        $reader->rewind();
 
-        while (true) {
-            $next = $reader->nextEntry();
+        while ($reader->valid()) {
+            $this->writer->write($reader->currentEntry());
 
-            if ($next === null) {
-                break;
-            }
-
-            $this->writer->write($next);
+            $reader->next();
         }
     }
 }

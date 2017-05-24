@@ -57,7 +57,5 @@ class ResourceReaderWriterTest extends TestCase
         $r->close();
 
         $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName));
-
-        dump((new ResourceDirReader($sourceUri))->readAll()->toArray());
     }
 }

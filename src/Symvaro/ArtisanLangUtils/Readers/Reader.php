@@ -3,6 +3,7 @@
 namespace Symvaro\ArtisanLangUtils\Readers;
 
 use Iterator;
+use Symvaro\ArtisanLangUtils\Entry;
 use Symvaro\ArtisanLangUtils\StringCollection;
 
 abstract class Reader implements Iterator
@@ -48,11 +49,20 @@ abstract class Reader implements Iterator
      */
     public function current()
     {
-        if ($this->valid()) {
-            return $this->current->getMessage();
+        if (!$this->valid()) {
+            return null;
         }
 
-        return null;
+        return $this->current->getMessage();
+    }
+
+    public function currentEntry()
+    {
+        if (!$this->valid()) {
+            return null;
+        }
+
+        return $this->current;
     }
 
     /**

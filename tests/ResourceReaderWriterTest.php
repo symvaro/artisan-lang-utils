@@ -47,9 +47,7 @@ class ResourceReaderWriterTest extends TestCase
         $sourceUri = __DIR__ . '/resources/lang/de';
 
         $r = new ResourceDirReader($sourceUri);
-        $w = new ResourceWriter();
-
-        $w->open($tmpDirName);
+        $w = new ResourceWriter($tmpDirName);
 
         $w->writeAll($r);
 

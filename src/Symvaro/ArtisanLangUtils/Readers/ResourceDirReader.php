@@ -73,19 +73,22 @@ class ResourceDirReader extends Reader
      */
     protected function nextEntry()
     {
-        if ($this->currentFileReader === null) {
-            return null;
+        $entry = null;
+
+        while ($this->currentFileReader !== null && $entry == null) {
+            if (!$this->currentFileReader->valid()) {
+                $this->loadNextFile();
+                continue;
+            }
+
+            $value = $this->currentFileReader->current();
+
+            if (is_string($value)) {
+                $entry = new Entry($this->currentFilePrefix . '.' . $this->currentFileReader->key(), $value);
+            }
+
+            $this->currentFileReader->next();
         }
-
-        if (!$this->currentFileReader->valid()) {
-            $this->loadNextFile();
-
-            return $this->nextEntry();
-        }
-
-        $entry = new Entry($this->currentFilePrefix . '.' . $this->currentFileReader->key(), $this->currentFileReader->current());
-
-        $this->currentFileReader->next();
 
         return $entry;
     }

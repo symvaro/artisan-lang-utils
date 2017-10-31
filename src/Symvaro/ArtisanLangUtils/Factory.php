@@ -11,22 +11,32 @@ use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 class Factory
 {
-    public static function createWriter($config)
-    {
-        $class = [
-            'po' => POWriter::class,
-            'resource' => ResourceWriter::class
-        ][self::extractKind($config)];
+    const READERS = [
+        'po' => POReader::class,
+        'resource' => ResourceDirReader::class
+    ];
 
-        return new $class(self::extractValue($config));
+    const WRITERS = [
+        'po' => POWriter::class,
+        'resource' => ResourceWriter::class
+    ];
+
+    public static function createWriter($format, $output)
+    {
+        if (!isset(self::WRITERS[$format])) {
+            return null;
+        }
+
+        $class = self::WRITERS[$format];
+
+        return new $class($output);
     }
 
     public static function createReader($config)
     {
-        $class = [
-            'po' => POReader::class,
-            'resource' => ResourceDirReader::class
-        ][self::extractKind($config)];
+        $readerIndex = self::extractKind($config);
+
+        $class = isset(self::READERS[$readerIndex]) ? self::READERS[$readerIndex] : ResourceDirReader::class;
 
         return new $class(self::extractValue($config));
     }

@@ -6,17 +6,20 @@ namespace Symvaro\ArtisanLangUtils\Commands;
 use Illuminate\Console\Command;
 use Symvaro\ArtisanLangUtils\Factory;
 use Symvaro\ArtisanLangUtils\Readers\POReader;
+use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 
 class ListEntries extends Command
 {
     protected $signature =
         'lang:list {input}';
 
-    protected $description = 'List all entries of a .po language file.';
+    protected $description = 'List all entries of a language.';
 
     public function handle()
     {
-        $reader = Factory::createReader($this->argument('input'));
+        $language = $this->argument('input');
+
+        $reader = new ResourceDirReader($language);
 
         $reader->rewind();
 

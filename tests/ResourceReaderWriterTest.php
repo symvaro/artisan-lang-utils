@@ -4,7 +4,6 @@ namespace Tests;
 
 use Faker\Factory;
 use PHPUnit\Framework\TestCase;
-use Symvaro\ArtisanLangUtils\Entry;
 use Symvaro\ArtisanLangUtils\Readers\ResourceFileReader;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
@@ -54,6 +53,6 @@ class ResourceReaderWriterTest extends TestCase
         $w->close();
         $r->close();
 
-        $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName));
+        $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName . '/de'));
     }
 }

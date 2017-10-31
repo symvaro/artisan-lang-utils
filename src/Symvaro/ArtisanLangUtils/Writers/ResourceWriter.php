@@ -2,6 +2,7 @@
 
 namespace Symvaro\ArtisanLangUtils\Writers;
 
+use Illuminate\Support\Arr;
 use Symvaro\ArtisanLangUtils\Entry;
 
 class ResourceWriter extends Writer
@@ -64,21 +65,23 @@ class ResourceWriter extends Writer
 
     private $currentLevel;
 
-    private function writeEntries($filename, array $entries)
+    private function writeEntries($filePath, array $entries)
     {
-        $filename = $this->uri . $filename;
+        $filePath = $this->uri . '/' . $filePath;
 
-        $pathElements = explode('/', substr($filename, 1));
+        echo $filePath . "\n";
+
+        $pathElements = explode('/', $filePath);
 
         $file = $pathElements[sizeof($pathElements) - 1];
 
-        $dir = substr($filename, 0, strlen($filename) - strlen($file));
+        $dir = substr($filePath, 0, strlen($filePath) - strlen($file));
 
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
 
-        $f = fopen($filename . '.php', 'w');
+        $f = fopen($filePath . '.php', 'w');
 
         fwrite($f, "<?php\n\nreturn [\n");
 

@@ -1,14 +1,14 @@
-/common.a,A
-/common.hello,Hallo
-/common.errors.500,Serverfehler
-/common.errors.404,"Nicht gefunden"
-/common.errors.others.1,Eins
-/common.errors.others.2,Zwei
-/common.errors.pyramid,Pyramide
-/common.x,X
-/special.youare,"du bist"
-/special.special-chars,"Das ""Anführungszeichen"", in 'zwei' Varianten"
-/nesting.a.b.c.d,x
-/subdir/subfile.subcontent,Subkontinent
-/small.one,Eins
-/small.two.half,Zwei-ein-halb
+de/common.a,A
+de/common.hello,Hallo
+de/common.errors.500,Serverfehler
+de/common.errors.404,"Nicht gefunden"
+de/common.errors.others.1,Eins
+de/common.errors.others.2,Zwei
+de/common.errors.pyramid,Pyramide
+de/common.x,X
+de/special.youare,"du bist"
+de/special.special-chars,"Das ""Anführungszeichen"", in 'zwei' Varianten"
+de/nesting.a.b.c.d,x
+de/subdir/subfile.subcontent,Subkontinent
+de/small.one,Eins
+de/small.two.half,Zwei-ein-halb

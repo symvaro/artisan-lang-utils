@@ -11,6 +11,7 @@ use Symvaro\ArtisanLangUtils\Entry;
 class ResourceDirReader extends Reader
 {
     private $langDirPath;
+    private $language;
 
     private $filesystem;
 
@@ -33,6 +34,8 @@ class ResourceDirReader extends Reader
         }
 
         $this->langDirPath = $uri;
+
+        $this->language = Arr::last(explode('/', $uri));
 
         $this->reset();
     }
@@ -58,7 +61,7 @@ class ResourceDirReader extends Reader
         $this->currentFileReader->rewind();
 
 
-        $langDirPathStrlen = strlen($this->langDirPath);
+        $langDirPathStrlen = strlen($this->langDirPath) - strlen($this->language);
 
         $this->currentFilePos += 1;
         $this->currentFilePrefix = substr(

@@ -15,13 +15,13 @@ class Export extends Command
     protected $signature =
         'lang:export 
         {language : Language in lang resource directory}
-        {output : File resource like "po:lang.po"}';
+        {out-file? : File to write to. If not specified, stdout is used.}
+        {--format=po : Output file format.}';
 
     protected $description = 'Export language resources into common lang file formats';
 
     private $writer;
-    private $filesystem;
-    
+
     public function handle()
     {
         if (!$this->validateLanguagePath()) {
@@ -33,7 +33,18 @@ class Export extends Command
             return;
         }
 
-        $this->writer = Factory::createWriter($this->argument('output'));
+        $uri = $this->argument('out-file');
+
+        if ($uri == null) {
+            $uri = 'php://output';
+        }
+        
+        $this->writer = Factory::createWriter($this->option('format'), $uri);
+
+        if ($this->writer === null) {
+            $this->errorUnknownFormat();
+            return;
+        }
 
         $this->exportTranslations();
 
@@ -61,6 +72,17 @@ class Export extends Command
         }
 
         return realpath(App::langPath() . '/' . $language);
+    }
+
+    private function errorUnknownFormat()
+    {
+        $error = "Invalid format! Available formats:";
+
+        foreach (Factory::WRITERS as $key => $value) {
+            $error .= "\n  $key";
+        }
+
+        $this->info($error);
     }
 
     private function exportTranslations()

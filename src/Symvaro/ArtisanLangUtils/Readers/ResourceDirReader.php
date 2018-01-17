@@ -28,11 +28,20 @@ class ResourceDirReader extends Reader
         $this->filesystem = new Filesystem();
 
         if (!$this->filesystem->isDirectory($uri)) {
-            $uri = resource_path('lang/' . $uri);
+
+            $jsonPath = realpath($uri . '.json');
+
+            if ($jsonPath === false) {
+                $uri = resource_path('lang/' . $uri);
+            }
         }
 
         if (!$this->filesystem->isDirectory($uri)) {
-            throw new Exception('please specify the resource lang dir');
+            $jsonPath = realpath($uri . '.json');
+
+            if ($jsonPath === false) {
+                throw new Exception('please specify the resource lang dir');
+            }
         }
 
         $this->langDirPath = $uri;
@@ -44,8 +53,15 @@ class ResourceDirReader extends Reader
 
     protected function reset()
     {
-        $this->files = $this->filesystem->allFiles($this->langDirPath);
+        if ($this->filesystem->isDirectory($this->langDirPath)) {
+            $this->files = $this->filesystem->allFiles($this->langDirPath);
+        }
+        else {
+            $this->files = [];
+        }
+
         $this->currentFilePos = 0;
+        $this->jsonParsed = false;
 
         $this->loadNextFile();
     }
@@ -66,10 +82,10 @@ class ResourceDirReader extends Reader
 
         $this->currentFilePos += 1;
         $this->currentFilePrefix = str_replace('/', '.', substr(
-            $nextFilePath,
-            $langDirPathStrlen,
-            strlen($nextFilePath) - $langDirPathStrlen - strlen('.php')
-        )) . '.';
+                $nextFilePath,
+                $langDirPathStrlen,
+                strlen($nextFilePath) - $langDirPathStrlen - strlen('.php')
+            )) . '.';
     }
 
     private function tryLoadJson()

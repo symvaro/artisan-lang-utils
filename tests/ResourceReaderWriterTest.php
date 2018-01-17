@@ -40,6 +40,16 @@ class ResourceReaderWriterTest extends TestCase
         $this->assertEquals(file_get_contents(__DIR__ . '/resources/de.csv'), stream_get_contents($tmp));
     }
 
+    public function testReadUs()
+    {
+        $values = (new ResourceDirReader(__DIR__ . '/resources/lang/us'))
+            ->readAll()->all();
+
+        $this->assertEquals([
+            'only one' => "I'm the only one."
+        ], $values);
+    }
+
     public function testWrite()
     {
         $faker = Factory::create();

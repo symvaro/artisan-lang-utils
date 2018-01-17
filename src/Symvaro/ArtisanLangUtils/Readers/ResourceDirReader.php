@@ -21,6 +21,8 @@ class ResourceDirReader extends Reader
 
     private $currentFileReader;
 
+    private $jsonParsed = false;
+
     public function __construct($uri)
     {
         $this->filesystem = new Filesystem();
@@ -51,7 +53,7 @@ class ResourceDirReader extends Reader
     private function loadNextFile()
     {
         if (!isset($this->files[$this->currentFilePos])) {
-            $this->currentFileReader = null;
+            $this->currentFileReader = $this->tryLoadJson();
             return;
         }
 
@@ -60,7 +62,6 @@ class ResourceDirReader extends Reader
         $this->currentFileReader = new ResourceFileReader($nextFilePath);
         $this->currentFileReader->rewind();
 
-
         $langDirPathStrlen = strlen($this->langDirPath) + 1;
 
         $this->currentFilePos += 1;
@@ -68,7 +69,29 @@ class ResourceDirReader extends Reader
             $nextFilePath,
             $langDirPathStrlen,
             strlen($nextFilePath) - $langDirPathStrlen - strlen('.php')
-        ));
+        )) . '.';
+    }
+
+    private function tryLoadJson()
+    {
+        if ($this->jsonParsed) {
+            return null;
+        }
+
+        $this->jsonParsed = true;
+
+        $jsonPath = $this->langDirPath . '.json';
+
+        if (realpath($jsonPath) === false) {
+            return null;
+        }
+
+        $reader = new JSONReader($jsonPath);
+        $reader->rewind();
+
+        $this->currentFilePrefix = '';
+
+        return $reader;
     }
 
     /**
@@ -87,7 +110,7 @@ class ResourceDirReader extends Reader
             $value = $this->currentFileReader->current();
 
             if (is_string($value)) {
-                $entry = new Entry($this->currentFilePrefix . '.' . $this->currentFileReader->key(), $value);
+                $entry = new Entry($this->currentFilePrefix . $this->currentFileReader->key(), $value);
             }
 
             $this->currentFileReader->next();

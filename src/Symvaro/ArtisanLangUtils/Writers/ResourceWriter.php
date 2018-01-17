@@ -32,7 +32,6 @@ class ResourceWriter extends Writer
     {
         $this->sortEntries();
 
-        dump($this->entries);
         $currentFile = null;
         $currentFileEntries = [];
 
@@ -96,6 +95,10 @@ class ResourceWriter extends Writer
 
     private function writeEntries($filePath, array $entries)
     {
+        if ($filePath === null) {
+            return;
+        }
+
         $filePath = $this->uri . '/' . $filePath;
 
         echo $filePath . "\n";

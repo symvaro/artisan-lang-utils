@@ -9,7 +9,6 @@ use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 // TODO read with lang.json
-// TODO read only lang.json
 // TODO write lang.json
 // TODO test lang.json that has resource like strings
 class ResourceReaderWriterTest extends TestCase
@@ -40,7 +39,7 @@ class ResourceReaderWriterTest extends TestCase
         $this->assertEquals(file_get_contents(__DIR__ . '/resources/de.csv'), stream_get_contents($tmp));
     }
 
-    public function testReadUs()
+    public function testJsonOnly()
     {
         $values = (new ResourceDirReader(__DIR__ . '/resources/lang/us'))
             ->readAll()->all();
@@ -48,6 +47,31 @@ class ResourceReaderWriterTest extends TestCase
         $this->assertEquals([
             'only one' => "I'm the only one."
         ], $values);
+
+        $dir = $this->tmpDir();
+
+        $w = new ResourceWriter($dir);
+        $w->writeAll($values);
+        $w->close();
+
+        $this->assertEquals($values, json_decode(file_get_contents($dir . '.json'), JSON_OBJECT_AS_ARRAY));
+        $this->assertDirIsEmpty($dir);
+
+    }
+
+    private function tmpDir()
+    {
+        $tmpDirName = sys_get_temp_dir() . '/lang_test_' . str_random();
+
+        mkdir($tmpDirName);
+
+        return $tmpDirName;
+    }
+
+    private function assertDirIsEmpty($dir)
+    {
+        dump(scandir($dir));
+        $this->assertTrue(count(scandir($dir)) == 2);
     }
 
     public function testWrite()

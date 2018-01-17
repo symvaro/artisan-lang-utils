@@ -8,6 +8,10 @@ use Symvaro\ArtisanLangUtils\Readers\ResourceFileReader;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
+// TODO read with lang.json
+// TODO read only lang.json
+// TODO write lang.json
+// TODO test lang.json that has resource like strings
 class ResourceReaderWriterTest extends TestCase
 {
     use ReaderTestUtils;

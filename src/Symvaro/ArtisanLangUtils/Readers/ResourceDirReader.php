@@ -61,14 +61,14 @@ class ResourceDirReader extends Reader
         $this->currentFileReader->rewind();
 
 
-        $langDirPathStrlen = strlen($this->langDirPath) - strlen($this->language);
+        $langDirPathStrlen = strlen($this->langDirPath) + 1;
 
         $this->currentFilePos += 1;
-        $this->currentFilePrefix = substr(
+        $this->currentFilePrefix = str_replace('/', '.', substr(
             $nextFilePath,
             $langDirPathStrlen,
             strlen($nextFilePath) - $langDirPathStrlen - strlen('.php')
-        );
+        ));
     }
 
     /**

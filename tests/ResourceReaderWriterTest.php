@@ -43,6 +43,10 @@ class ResourceReaderWriterTest extends TestCase
 
         mkdir($tmpDirName);
 
+        $tmpDirName .= '/de';
+
+        mkdir($tmpDirName);
+
         $sourceUri = __DIR__ . '/resources/lang/de';
 
         $r = new ResourceDirReader($sourceUri);
@@ -53,6 +57,6 @@ class ResourceReaderWriterTest extends TestCase
         $w->close();
         $r->close();
 
-        $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName . '/de'));
+        $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName));
     }
 }

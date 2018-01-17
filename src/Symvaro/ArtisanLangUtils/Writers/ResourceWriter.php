@@ -2,20 +2,25 @@
 
 namespace Symvaro\ArtisanLangUtils\Writers;
 
-use Illuminate\Support\Arr;
 use Symvaro\ArtisanLangUtils\Entry;
 
 class ResourceWriter extends Writer
 {
     private $entries;
+    private $jsonEntries;
 
     private $uri;
+
+    private $languageIdentifier;
 
     public function open($uri)
     {
         $this->uri = $uri;
 
+        $this->languageIdentifier = array_last(explode('/', $uri));
+
         $this->entries = [];
+        $this->jsonEntries = [];
     }
 
     public function write(Entry $entry)
@@ -27,10 +32,16 @@ class ResourceWriter extends Writer
     {
         $this->sortEntries();
 
+        dump($this->entries);
         $currentFile = null;
         $currentFileEntries = [];
 
         foreach ($this->entries as $key => $message) {
+            if ($this->isJsonEntry($key)) {
+                $this->jsonEntries[$key] = $message;
+                continue;
+            }
+
             $filename = $this->extractFilename($key);
 
             if ($currentFile === null) {
@@ -45,6 +56,8 @@ class ResourceWriter extends Writer
         }
 
         $this->writeEntries($currentFile, $currentFileEntries);
+
+        $this->writeJsonEntries();
     }
 
     private function sortEntries()
@@ -52,13 +65,32 @@ class ResourceWriter extends Writer
         ksort($this->entries);
     }
 
+    private function isJsonEntry($key)
+    {
+        return strpos($key, '.') === false;
+    }
+
     private function extractFilename($key)
     {
+        $separatorPos = strpos($key, '.');
+
+        if ($separatorPos === false) {
+            // this comes into the json file
+            return '../' . $this->languageIdentifier . '.json';
+        }
+
+
         return substr($key, 0, strpos($key, '.'));
     }
 
     private function extractLangKey($key)
     {
+        $separatorPos = strpos($key, '.');
+
+        if ($separatorPos === false) {
+            return $key;
+        }
+
         return substr($key, strpos($key, '.') + 1);
     }
 
@@ -89,5 +121,10 @@ class ResourceWriter extends Writer
         }
 
         fwrite($f, "];\n");
+    }
+
+    private function writeJsonEntries()
+    {
+        file_put_contents($this->uri . '.json', json_encode($this->jsonEntries, JSON_PRETTY_PRINT));
     }
 }

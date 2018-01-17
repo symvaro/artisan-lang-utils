@@ -19,10 +19,10 @@ class Import extends Command
         $reader = new POReader($this->argument('file'));
         $reader->rewind();
 
-        $writer = new ResourceWriter();
 
         $path = rtrim($this->argument('lang_path'), '/');
 
+        $writer = new ResourceWriter();
         $writer->open($path);
 
         while ($reader->valid()) {

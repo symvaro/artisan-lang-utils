@@ -38,14 +38,6 @@ class ResourceDirReader extends Reader
             }
         }
 
-//        if (!$this->filesystem->isDirectory($uri)) {
-//            $jsonPath = realpath($uri . '.json');
-//
-//            if ($jsonPath === false) {
-//                throw new Exception('please specify the resource lang dir');
-//            }
-//        }
-
         $this->langDirPath = $uri;
 
         $this->language = Arr::last(explode('/', $uri));

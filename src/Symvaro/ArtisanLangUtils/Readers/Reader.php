@@ -9,6 +9,8 @@ abstract class Reader implements Iterator
 {
     private $current;
 
+    public abstract function open($uri);
+
     public function close() {}
 
     public function allMessages() {

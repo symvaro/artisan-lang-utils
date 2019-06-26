@@ -21,8 +21,6 @@ class Export extends Command
 
     protected $description = 'Export language resources into given lang file format';
 
-    private $writer;
-
     public function handle()
     {
         $language = $this->option('language');
@@ -43,7 +41,8 @@ class Export extends Command
             $uri = 'php://output';
         }
         
-        $writer = Factory::createWriter($this->option('format'), $uri);
+        $writer = Factory::createWriter($this->option('format'));
+        $writer->open($uri);
 
         if ($writer === null) {
             $this->errorUnknownFormat();

@@ -6,12 +6,12 @@ common.errors.others.1,Eins
 common.errors.others.2,Zwei
 common.errors.pyramid,Pyramide
 common.x,X
+dot-nesting.a,"also a"
+dot-nesting.a.b,"different a"
+nesting.a.b.c.d,x
+small.one,Eins
+small.two.half,Zwei-ein-halb
 special.youare,"du bist"
 special.special-chars,"Das ""Anführungszeichen"", in 'zwei' Varianten"
 special.special-chars-v2,"Das ""doppelte"" Anführungszeichen gibt's auch 'einfach'"
-nesting.a.b.c.d,x
 subdir.subfile.subcontent,Subkontinent
-dot-nesting.a,"also a"
-dot-nesting.a.b,"different a"
-small.one,Eins
-small.two.half,Zwei-ein-halb

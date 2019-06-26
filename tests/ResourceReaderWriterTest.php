@@ -17,22 +17,24 @@ class ResourceReaderWriterTest extends TestCase
 
     public function testResourceFileReader()
     {
-        $r = new ResourceFileReader(__DIR__ . '/resources/lang/de/small.php');
+        $r = new ResourceFileReader();
+        $r->open(__DIR__ . '/resources/lang/de/small.php');
 
         $this->assertEquals([
             'one' => 'Eins',
             'two.half' => 'Zwei-ein-halb'
-        ], $r->readAll()->all());
+        ], $r->allMessages()->all());
     }
 
     public function testRead()
     {
-        $r = new ResourceDirReader(__DIR__ . '/resources/lang/de');
+        $r = new ResourceDirReader();
+        $r->open(__DIR__ . '/resources/lang/de');
 
         $tmp = tmpfile();
 
-        foreach ($r as $key => $message) {
-            fputcsv($tmp, [$key, $message]);
+        foreach ($r as $entry) {
+            fputcsv($tmp, [$entry->key, $entry->message]);
         }
 
         rewind($tmp);
@@ -41,8 +43,9 @@ class ResourceReaderWriterTest extends TestCase
 
     public function testJsonOnly()
     {
-        $values = (new ResourceDirReader(__DIR__ . '/resources/lang/us'))
-            ->readAll()->all();
+        $r = new ResourceDirReader();
+        $r->open(__DIR__ . '/resources/lang/us');
+        $values = $r->allMessages()->all();
 
         $this->assertEquals([
             'only one' => "I'm the only one."
@@ -51,7 +54,7 @@ class ResourceReaderWriterTest extends TestCase
         $dir = $this->tmpDir();
 
         $w = new ResourceWriter($dir);
-        $w->writeAll($values);
+        $w->writeAll($r->allEntries());
         $w->close();
 
         $this->assertEquals($values, json_decode(file_get_contents($dir . '.json'), JSON_OBJECT_AS_ARRAY));
@@ -87,7 +90,8 @@ class ResourceReaderWriterTest extends TestCase
 
         $sourceUri = __DIR__ . '/resources/lang/de';
 
-        $r = new ResourceDirReader($sourceUri);
+        $r = new ResourceDirReader();
+        $r->open($sourceUri);
         $w = new ResourceWriter($tmpDirName);
 
         $w->writeAll($r);
@@ -95,6 +99,11 @@ class ResourceReaderWriterTest extends TestCase
         $w->close();
         $r->close();
 
-        $this->assertReaderEquals(new ResourceDirReader($sourceUri), new ResourceDirReader($tmpDirName));
+        $r1 = new ResourceDirReader();
+        $r1->open($sourceUri);
+        $r2 = new ResourceDirReader();
+        $r2->open($tmpDirName);
+
+        $this->assertReaderEquals($r1, $r2);
     }
 }

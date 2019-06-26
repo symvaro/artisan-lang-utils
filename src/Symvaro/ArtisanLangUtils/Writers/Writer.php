@@ -18,13 +18,10 @@ abstract class Writer
 
     public abstract function write(Entry $entry);
 
-    /**
-     * @param StringCollection|\Traversable $strings
-     */
-    public function writeAll($strings)
+    public function writeAll($entries)
     {
-        foreach ($strings as $key => $message) {
-            $this->write(new Entry($key, $message));
+        foreach ($entries as $entry) {
+            $this->write($entry);
         }
     }
 

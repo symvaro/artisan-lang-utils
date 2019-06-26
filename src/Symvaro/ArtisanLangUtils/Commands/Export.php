@@ -14,64 +14,45 @@ class Export extends Command
 {
     protected $signature =
         'lang:export 
-        {language : Language in lang resource directory}
-        {out-file? : File to write to. If not specified, stdout is used.}
-        {--format=po : Output file format.}';
+        {--l|language= : Language in lang resource directory}
+        {--p|path= : Path to file/folder}
+        {--format=po : Output file format.}
+        {output-file? : File to write to. If not specified, stdout is used.}';
 
-    protected $description = 'Export language resources into common lang file formats';
+    protected $description = 'Export language resources into given lang file format';
 
     private $writer;
 
     public function handle()
     {
-        if (!$this->validateLanguagePath()) {
-            $this->comment('Could not find given language resource directory: "' .
-                App::langPath() . '/' . $this->argument('language')
-                . '"'
-            );
+        $language = $this->option('language');
+        $path = $this->option('path');
 
+        if (!empty($path) && !empty($language)) {
+            $this->error('Either language or path must be used.');
             return;
         }
 
-        $uri = $this->argument('out-file');
+        if ($language) {
+            $path = App::langPath() . "/$language";
+        }
+
+        $uri = $this->argument('output-file');
 
         if ($uri == null) {
             $uri = 'php://output';
         }
         
-        $this->writer = Factory::createWriter($this->option('format'), $uri);
+        $writer = Factory::createWriter($this->option('format'), $uri);
 
-        if ($this->writer === null) {
+        if ($writer === null) {
             $this->errorUnknownFormat();
             return;
         }
 
-        $this->exportTranslations();
+        $this->exportTranslations($path, $writer);
 
-        $this->writer->close();
-    }
-
-    private function validateLanguagePath()
-    {
-        $langPath = App::langPath();
-        $realPath = $this->getLangPath();
-
-        if (!$realPath) {
-            return false;
-        }
-        
-        return strncmp($langPath, $realPath, strlen($langPath)) === 0;
-    }
-
-    private function getLangPath()
-    {
-        $language = $this->argument('language');
-
-        if ($language == null) {
-            return false;
-        }
-
-        return realpath(App::langPath() . '/' . $language);
+        $writer->close();
     }
 
     private function errorUnknownFormat()
@@ -85,17 +66,15 @@ class Export extends Command
         $this->info($error);
     }
 
-    private function exportTranslations()
+    private function exportTranslations($path, $writer)
     {
-        $path = $this->getLangPath();
+        $reader = new ResourceDirReader();
+        $reader->open($path);
 
-        $reader = new ResourceDirReader($path);
-        $reader->rewind();
-
-        while ($reader->valid()) {
-            $this->writer->write($reader->currentEntry());
-
-            $reader->next();
+        foreach ($reader as $entry) {
+            $writer->write($entry);
         }
+
+        $reader->close();
     }
 }

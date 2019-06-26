@@ -15,17 +15,17 @@ class ResourceFileReader extends Reader
 
     private $entries;
 
-    public function __construct($uri)
+    public function open($uri)
     {
         $this->filesystem = new Filesystem();
 
-        $fileContents = $this->filesystem->getRequire($uri);
+        $fileContents = require $uri;
 
         $this->entries = Collection::make(Arr::dot($fileContents))->getIterator();
     }
 
     /**
-     * @return \Symvaro\ArtisanLangUtils\Entry | null
+     * @return Entry | null
      */
     protected function nextEntry()
     {
@@ -33,17 +33,17 @@ class ResourceFileReader extends Reader
             return null;
         }
 
-        $entry = new Entry($this->entries->key(), $this->entries->current());
-
+        $key = $this->entries->key();
+        $message = $this->entries->current();
         $this->entries->next();
 
-        return $entry;
+        if ($message === []) {
+            return null;
+        }
+
+        return new Entry($key, $message);
     }
 
-    /**
-     * Resets the reader, so that nextEntry will read the first entry again.
-     * @return void
-     */
     protected function reset()
     {
         $this->entries->rewind();

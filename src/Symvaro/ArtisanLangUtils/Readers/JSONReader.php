@@ -12,7 +12,7 @@ class JSONReader extends Reader
 
     private $iterator;
 
-    public function __construct($uri)
+    public function open($uri)
     {
         $this->values = json_decode(file_get_contents($uri), true);
 
@@ -20,7 +20,7 @@ class JSONReader extends Reader
     }
 
     /**
-     * @return \Symvaro\ArtisanLangUtils\Entry | null
+     * @return Entry | null
      */
     protected function nextEntry()
     {

@@ -6,7 +6,7 @@ namespace Symvaro\ArtisanLangUtils;
 
 class Entry
 {
-    private $key, $message;
+    public $key, $message;
 
     public function __construct($key, $message)
     {

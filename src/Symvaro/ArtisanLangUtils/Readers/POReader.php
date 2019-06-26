@@ -16,7 +16,7 @@ class POReader extends Reader
 
     private $entryKey, $entryValue;
 
-    public function __construct($uri)
+    public function open($uri)
     {
         $this->handle = fopen($uri, 'r');
 

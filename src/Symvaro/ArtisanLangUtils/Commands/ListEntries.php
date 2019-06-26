@@ -11,24 +11,19 @@ use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 class ListEntries extends Command
 {
     protected $signature =
-        'lang:list {input}';
+        'lang:list {language}';
 
     protected $description = 'List all entries of a language.';
 
     public function handle()
     {
-        $language = $this->argument('input');
+        $language = $this->argument('language');
 
-        $reader = new ResourceDirReader($language);
+        $reader = new ResourceDirReader();
+        $reader->open($language);
 
-        $reader->rewind();
-
-        while($reader->valid()) {
-            $next = $reader->currentEntry();
-
-            echo "$next\n";
-
-            $reader->next();
+        foreach ($reader as $entry) {
+            echo "$entry\n";
         }
 
         $reader->close();

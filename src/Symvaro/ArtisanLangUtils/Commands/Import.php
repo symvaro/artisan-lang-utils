@@ -11,8 +11,13 @@ class Import extends Command
 {
     protected $signature =
         'lang:import 
-        {file : po file} 
-        {lang_path : e.g. ./resources/lang/en}';
+        {--f|format=po : Input file format.}
+        {--j|as-json : Input will only be written to the language json}
+        {--p|path : Specifies that the language argument is a real path}
+        {input-file}
+        {language}';
+
+    // TODO how to handle keys, that only can be written to json
 
     public function handle()
     {

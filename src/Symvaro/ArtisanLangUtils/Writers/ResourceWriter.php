@@ -30,6 +30,31 @@ class ResourceWriter extends Writer
 
     public function close()
     {
+        /**
+         * TODO Refactor writing algorithm:
+         *
+         * resourceFileExistsFor(key, dir = '.'):
+         *   file = first_part(key);
+         *
+         *   is_dir(file):
+         *      return existsInFile(key - file, file);
+         *
+         *   return is_file(file);
+         *
+         * if (resourceFileExistsFor(key)):
+         *   write to resource;
+         *   return;
+         *
+         * if (validFilename(first_part(key))):
+         *   write to resource;
+         *   return;
+         *
+         * write to json
+         * return;
+         *
+         * Collect all files up front and delete ones that weren't used. (only if flag?)
+         */
+
         $this->sortEntries();
 
         $currentFile = null;

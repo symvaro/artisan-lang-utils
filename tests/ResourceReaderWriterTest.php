@@ -61,7 +61,6 @@ class ResourceReaderWriterTest extends TestCase
 
         $this->assertEquals($values, json_decode(file_get_contents($dir . '.json'), JSON_OBJECT_AS_ARRAY));
         $this->assertDirIsEmpty($dir);
-
     }
 
     private function tmpDir()
@@ -75,7 +74,6 @@ class ResourceReaderWriterTest extends TestCase
 
     private function assertDirIsEmpty($dir)
     {
-        dump(scandir($dir));
         $this->assertTrue(count(scandir($dir)) == 2);
     }
 
@@ -108,5 +106,32 @@ class ResourceReaderWriterTest extends TestCase
         $r2->open($tmpDirName);
 
         $this->assertReaderEquals($r1, $r2);
+    }
+
+    public function testReuseFiles()
+    {
+        $faker = Factory::create();
+        $tmpDirName = sys_get_temp_dir() . '/lang_test_' . $faker->uuid;
+        $sourceUri = __DIR__ . '/resources/lang/de';
+
+        exec("cp -r $sourceUri $tmpDirName");
+
+        $r = new ResourceDirReader();
+        $r->open($tmpDirName);
+        $w = new ResourceWriter();
+        $w->open($tmpDirName);
+
+        $w->writeAll($r);
+
+        $w->close();
+        $r->close();
+
+        $r1 = new ResourceDirReader();
+        $r1->open($sourceUri);
+        $r2 = new ResourceDirReader();
+        $r2->open($tmpDirName);
+
+        $this->assertReaderEquals($r1, $r2);
+        $this->assertFalse(file_exists("$tmpDirName/subdir.php"));
     }
 }

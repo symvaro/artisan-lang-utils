@@ -64,7 +64,7 @@ class ResourceWriter extends Writer
             $fileKey = $this->findFileKey($key);
 
             if (!$fileKey) {
-                $fileKey = $this->tryExtractFilename($key);
+                $fileKey = $this->extractFileKey($key);
 
                 // can't extract filename so we store it in the json file
                 if (!$fileKey) {
@@ -74,7 +74,7 @@ class ResourceWriter extends Writer
             }
 
             $key = $this->extractLangKey($key, $fileKey);
-            $filename = $this->initialFiles[$fileKey] ?? $fileKey;
+            $filename = $this->initialFiles[$fileKey] ?? ("$fileKey.php");
             
             if (!isset($files[$filename])) {
                 $files[$filename] = [];
@@ -82,14 +82,14 @@ class ResourceWriter extends Writer
             
             $files[$filename][$key] = $message;
         }
-        
+
         return (object)[
             'json' => $json,
             'files' => $files,
         ];
     }
 
-    private function sortEntries()
+   private function sortEntries()
     {
         ksort($this->entries);
     }
@@ -102,7 +102,7 @@ class ResourceWriter extends Writer
      */
     private function findFileKey($key)
     {
-        $fileKeyParts = explode($key, '.');
+        $fileKeyParts = explode('.', $key);
 
         while (true) {
             array_pop($fileKeyParts);
@@ -120,7 +120,7 @@ class ResourceWriter extends Writer
 
         return null;
     }
-    private function tryExtractFilename($key)
+    private function extractFileKey($key)
     {
         $separatorPos = strpos($key, '.');
 
@@ -154,8 +154,6 @@ class ResourceWriter extends Writer
 
         $filePath = $this->uri . '/' . $filePath;
 
-        echo $filePath . "\n";
-
         $pathElements = explode('/', $filePath);
 
         $file = $pathElements[sizeof($pathElements) - 1];
@@ -166,7 +164,7 @@ class ResourceWriter extends Writer
             mkdir($dir, 0775, true);
         }
 
-        $f = fopen($filePath . '.php', 'w');
+        $f = fopen($filePath, 'w');
 
         fwrite($f, "<?php\n\nreturn [\n");
 
@@ -207,9 +205,12 @@ class ResourceWriter extends Writer
 
         return collect($filenames)
             ->mapWithKeys(function ($f) use ($begin) {
-                $length = strlen($f) - $begin - strlen('.php');
-                $fileName = substr($f, $begin, $length);
-                return [str_replace('/', '.', $fileName) => $f];
+                $length = strlen($f) - $begin;
+                $filename = substr($f, $begin, $length);
+                $fileKeyPart = substr($filename, 0, strlen($filename) - strlen('.php'));
+                $fileKey = str_replace('/', '.', $fileKeyPart);
+                
+                return [$fileKey => $filename];
             });
     }
 
@@ -217,7 +218,7 @@ class ResourceWriter extends Writer
     {
         foreach ($this->initialFiles as $filename) {
             if (!in_array($filename, $this->writtenFiles)) {
-                unset($filename);
+                unlink("{$this->uri}/$filename");
             }
         }
     }

@@ -26,6 +26,6 @@ class Entry
 
     public function __toString()
     {
-        return $this->key . ": " . $this->message;
+        return $this->message;
     }
 }

@@ -53,7 +53,8 @@ class ResourceReaderWriterTest extends TestCase
 
         $dir = $this->tmpDir();
 
-        $w = new ResourceWriter($dir);
+        $w = new ResourceWriter();
+        $w->open($dir);
         $w->writeAll($r->allEntries());
         $w->close();
 
@@ -92,7 +93,8 @@ class ResourceReaderWriterTest extends TestCase
 
         $r = new ResourceDirReader();
         $r->open($sourceUri);
-        $w = new ResourceWriter($tmpDirName);
+        $w = new ResourceWriter();
+        $w->open($tmpDirName);
 
         $w->writeAll($r);
 

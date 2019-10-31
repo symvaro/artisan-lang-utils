@@ -26,10 +26,12 @@ class Export extends Command
         $language = $this->option('language');
         $path = $this->option('path');
 
-        if (!empty($path) && !empty($language)) {
+        if ((!empty($path) && !empty($language))
+                || (empty($path) && empty($language))) {
             $this->error('Either language or path must be used.');
             return;
         }
+
 
         if ($language) {
             $path = App::langPath() . "/$language";

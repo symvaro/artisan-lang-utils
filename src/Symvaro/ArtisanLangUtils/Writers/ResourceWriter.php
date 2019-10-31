@@ -9,6 +9,9 @@ class ResourceWriter extends Writer
     private $entries;
     private $jsonEntries;
 
+    private $initialFiles;
+    private $unneededFiles;
+
     private $uri;
 
     private $languageIdentifier;
@@ -18,6 +21,9 @@ class ResourceWriter extends Writer
         $this->uri = $uri;
 
         $this->languageIdentifier = array_last(explode('/', $uri));
+
+        $this->initialFiles = $this->mapKeysToFiles($this->getAllFiles($this->uri));
+        $this->unneededFiles = $this->initialFiles;
 
         $this->entries = [];
         $this->jsonEntries = [];
@@ -61,6 +67,12 @@ class ResourceWriter extends Writer
         $currentFileEntries = [];
 
         foreach ($this->entries as $key => $message) {
+
+            $sourceFileKey = $this->getFileKeyOfSource($key);
+
+            if (!$sourceFileKey) {
+
+            }
             if ($this->isJsonEntry($key)) {
                 $this->jsonEntries[$key] = $message;
                 continue;
@@ -69,8 +81,10 @@ class ResourceWriter extends Writer
             $filename = $this->extractFilename($key);
 
             if ($currentFile === null) {
+                // start new file
                 $currentFile = $filename;
             } else if ($currentFile !== $filename) {
+                // finish write to file
                 $this->writeEntries($currentFile, $currentFileEntries);
                 $currentFile = $filename;
                 $currentFileEntries = [];
@@ -91,7 +105,30 @@ class ResourceWriter extends Writer
 
     private function isJsonEntry($key)
     {
-        return strpos($key, '.') === false;
+        if (strpos($key, '.') === false) {
+            return true;
+        }
+    }
+
+    private function getFileKeyOfSource($key) {
+
+        $fileKeyParts = explode($key, '.');
+
+        while (true) {
+            array_pop($fileKeyParts);
+
+            if (empty($fileKeyParts)) {
+                break;
+            }
+
+            $fileKey = implode('.', $fileKeyParts);
+
+            if (isset($this->initialFiles[$fileKey])) {
+                return $fileKey;
+            }
+        }
+
+        return null;
     }
 
     private function extractFilename($key)
@@ -154,5 +191,34 @@ class ResourceWriter extends Writer
     private function writeJsonEntries()
     {
         file_put_contents($this->uri . '.json', json_encode($this->jsonEntries, JSON_PRETTY_PRINT));
+    }
+
+    private function getAllFiles($uri)
+    {
+        $result = [];
+        $files = glob($uri . '/*');
+
+        foreach ($files as $file) {
+            if (is_dir($file)) {
+                $result = array_merge($result, $this->getAllFiles($file));
+            }
+            else {
+                $result[] = $file;
+            }
+        }
+
+        return $result;
+    }
+
+    private function mapKeysToFiles(array $filenames)
+    {
+        $begin = strlen($this->uri) + 1;
+
+        return collect($filenames)
+            ->mapWithKeys(function ($f) use ($begin) {
+                $length = strlen($f) - $begin - strlen('.php');
+                $fileName = substr($f, $begin, $length);
+                return [str_replace('/', '.', $fileName) => $f];
+            });
     }
 }

@@ -20,7 +20,7 @@ class Import extends Command
 
     protected $description = 'Imports and replaces language strings from various formats for one language.';
 
-    // TODO how to handle keys, that only can be written to json
+    // TODO how to handle keys, that only can be written to json. Warning?
 
     public function handle()
     {
@@ -37,6 +37,7 @@ class Import extends Command
         $path = resource_path('lang/' . $this->argument('language'));
 
         if ($this->option('json-only')) {
+            // TODO delete other files if present
             $writer = new JSONWriter();
             $writer->open($path . '.json');
         }
@@ -45,10 +46,8 @@ class Import extends Command
             $writer->open($path);
         }
 
-        while ($reader->valid()) {
-            $writer->write($reader->currentEntry());
-
-            $reader->next();
+        foreach ($reader as $entry) {
+            $writer->write($entry);
         }
 
         $writer->close();

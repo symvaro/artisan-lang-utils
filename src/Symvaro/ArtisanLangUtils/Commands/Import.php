@@ -15,15 +15,18 @@ class Import extends Command
         {--f|format=po : Input file format.}
         {--j|json-only : Input will only be written to the language json}
         {--p|path : Specifies that the language argument is a real path}
-        {input-file}
-        {language}';
+        {--l|language=}
+        {input-file}';
 
     protected $description = 'Imports and replaces language strings from various formats for one language.';
 
-    // TODO how to handle keys, that only can be written to json. Warning?
-
     public function handle()
     {
+        if (empty($this->option('language'))) {
+            $this->error('language required');
+            return;
+        }
+        
         $reader = Factory::createReader($this->option('format'));
 
         if (!$reader) {
@@ -34,17 +37,15 @@ class Import extends Command
         $reader->open($this->argument('input-file'));
         $reader->rewind();
 
-        $path = resource_path('lang/' . $this->argument('language'));
+        $path = resource_path('lang/' . $this->option('language'));
 
+        $writer = new ResourceWriter();
+        
         if ($this->option('json-only')) {
-            // TODO delete other files if present
-            $writer = new JSONWriter();
-            $writer->open($path . '.json');
+            $writer->outputJsonOnly();
         }
-        else {
-            $writer = new ResourceWriter();
-            $writer->open($path);
-        }
+        
+        $writer->open($path);
 
         foreach ($reader as $entry) {
             $writer->write($entry);

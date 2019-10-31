@@ -9,7 +9,7 @@ class POReader extends Reader
     private $handle;
 
     private $line;
-    private $col;
+    private $col, $row;
 
     private $prevChar;
     private $char;
@@ -19,14 +19,14 @@ class POReader extends Reader
     public function open($uri)
     {
         $this->handle = fopen($uri, 'r');
-
+        $this->row = 0;
         $this->readLine();
     }
 
     protected function reset()
     {
         rewind($this->handle);
-
+        $this->row = 0;
         $this->readLine();
     }
 
@@ -41,6 +41,7 @@ class POReader extends Reader
     private function readLine()
     {
         $this->line = fgets($this->handle);
+        $this->row += 1;
         $this->col = 0;
         $this->char = "\n";
         $this->nextChar();
@@ -117,7 +118,7 @@ class POReader extends Reader
     {
         for ($i = 0; $i < strlen($key); $i+=1) {
             if ($key[$i] !== $this->char) {
-                throw new \ParseError();
+                throw new \Exception("Parsing failed! row: {$this->row}, col: {$this->col}");
             }
 
             $this->nextChar();

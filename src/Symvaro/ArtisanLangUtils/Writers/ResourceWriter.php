@@ -8,7 +8,6 @@ use Symvaro\ArtisanLangUtils\Entry;
 class ResourceWriter extends Writer
 {
     private $entries;
-    private $jsonEntries;
 
     private $initialFiles;
     private $writtenFiles;
@@ -16,17 +15,20 @@ class ResourceWriter extends Writer
     private $uri;
 
     private $languageIdentifier;
+    private $jsonOnly = false;
 
     public function open($uri)
     {
         $this->uri = $uri;
-
         $this->languageIdentifier = Arr::last(explode('/', $uri));
-
         $this->initialFiles = $this->mapKeysToFiles($this->getAllFiles($this->uri));
-
         $this->entries = [];
-        $this->jsonEntries = [];
+    }
+
+    public function outputJsonOnly()
+    {
+        $this->jsonOnly = true;
+        return $this;
     }
 
     public function write(Entry $entry)
@@ -61,6 +63,11 @@ class ResourceWriter extends Writer
         $files = [];
         $json = [];
         foreach ($entries as $key => $message) {
+            if ($this->jsonOnly) {
+                $json[$key] = $message;
+                continue;
+            }
+
             $fileKey = $this->findFileKey($key);
 
             if (!$fileKey) {
@@ -199,6 +206,14 @@ class ResourceWriter extends Writer
         return $result;
     }
 
+    /**
+     * Extract keys from filenames and map them like:
+     *
+     * [ "subdir.subfile' => "subdir/subfile.php" ]
+     *
+     * @param array $filenames
+     * @return \Illuminate\Support\Collection
+     */
     private function mapKeysToFiles(array $filenames)
     {
         $begin = strlen($this->uri) + 1;

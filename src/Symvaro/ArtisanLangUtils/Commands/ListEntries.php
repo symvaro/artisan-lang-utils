@@ -22,8 +22,8 @@ class ListEntries extends Command
         $reader = new ResourceDirReader();
         $reader->open($language);
 
-        foreach ($reader as $entry) {
-            echo "$entry\n";
+        foreach ($reader as $key => $entry) {
+            echo "$key: $entry\n";
         }
 
         $reader->close();

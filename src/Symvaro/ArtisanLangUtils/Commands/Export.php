@@ -16,7 +16,7 @@ class Export extends Command
         'lang:export 
         {--l|language= : Language in lang resource directory}
         {--p|path= : Path to file/folder}
-        {--format=po : Output file format.}
+        {--f|format=po : Output file format.}
         {output-file? : File to write to. If not specified, stdout is used.}';
 
     protected $description = 'Export language resources into given lang file format';

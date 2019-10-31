@@ -232,7 +232,7 @@ class ResourceWriter extends Writer
     private function removeUnusedFiles()
     {
         foreach ($this->initialFiles as $filename) {
-            if (!in_array($filename, $this->writtenFiles)) {
+            if (!in_array($filename, $this->writtenFiles ?? [])) {
                 unlink("{$this->uri}/$filename");
             }
         }

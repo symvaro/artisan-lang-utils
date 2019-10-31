@@ -16,7 +16,7 @@ class Import extends Command
         {--j|json-only : Input will only be written to the language json}
         {--p|path : Specifies that the language argument is a real path}
         {--l|language=}
-        {input-file}';
+        {input-file? : File to read from, stdin will be used if none is specified}';
 
     protected $description = 'Imports and replaces language strings from various formats for one language.';
 
@@ -33,8 +33,14 @@ class Import extends Command
             $this->errorUnknownFormat();
             return;
         }
+        
+        $inFile = $this->argument('input-file');
+        
+        if (empty($inFile)) {
+            $inFile = 'php://stdin';
+        }
 
-        $reader->open($this->argument('input-file'));
+        $reader->open($inFile);
         $reader->rewind();
 
         $path = resource_path('lang/' . $this->option('language'));

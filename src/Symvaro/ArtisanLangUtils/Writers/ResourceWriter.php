@@ -186,7 +186,15 @@ class ResourceWriter extends Writer
 
     private function writeJsonEntries($entries)
     {
-        file_put_contents($this->uri . '.json', json_encode($entries, JSON_PRETTY_PRINT));
+        $file = $this->uri . '.json';
+        if (!empty($entries)) {
+            file_put_contents($file, json_encode($entries, JSON_PRETTY_PRINT));
+            return;
+        }
+        
+        if (file_exists($file)) {
+            unlink($file);
+        }
     }
 
     private function getAllFiles($uri)

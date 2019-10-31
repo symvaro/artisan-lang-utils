@@ -2,6 +2,7 @@
 
 namespace Symvaro\ArtisanLangUtils\Writers;
 
+use Illuminate\Support\Arr;
 use Symvaro\ArtisanLangUtils\Entry;
 
 class ResourceWriter extends Writer
@@ -10,7 +11,7 @@ class ResourceWriter extends Writer
     private $jsonEntries;
 
     private $initialFiles;
-    private $unneededFiles;
+    private $writtenFiles;
 
     private $uri;
 
@@ -20,10 +21,9 @@ class ResourceWriter extends Writer
     {
         $this->uri = $uri;
 
-        $this->languageIdentifier = array_last(explode('/', $uri));
+        $this->languageIdentifier = Arr::last(explode('/', $uri));
 
         $this->initialFiles = $this->mapKeysToFiles($this->getAllFiles($this->uri));
-        $this->unneededFiles = $this->initialFiles;
 
         $this->entries = [];
         $this->jsonEntries = [];
@@ -36,66 +36,57 @@ class ResourceWriter extends Writer
 
     public function close()
     {
-        /**
-         * TODO Refactor writing algorithm:
-         *
-         * resourceFileExistsFor(key, dir = '.'):
-         *   file = first_part(key);
-         *
-         *   is_dir(file):
-         *      return existsInFile(key - file, file);
-         *
-         *   return is_file(file);
-         *
-         * if (resourceFileExistsFor(key)):
-         *   write to resource;
-         *   return;
-         *
-         * if (validFilename(first_part(key))):
-         *   write to resource;
-         *   return;
-         *
-         * write to json
-         * return;
-         *
-         * Collect all files up front and delete ones that weren't used. (only if flag?)
-         */
-
         $this->sortEntries();
 
-        $currentFile = null;
-        $currentFileEntries = [];
+        $fileGroups = $this->wrapFilenames($this->entries);
+        
+        $this->writeJsonEntries($fileGroups->json);
 
-        foreach ($this->entries as $key => $message) {
-
-            $sourceFileKey = $this->getFileKeyOfSource($key);
-
-            if (!$sourceFileKey) {
-
-            }
-            if ($this->isJsonEntry($key)) {
-                $this->jsonEntries[$key] = $message;
-                continue;
-            }
-
-            $filename = $this->extractFilename($key);
-
-            if ($currentFile === null) {
-                // start new file
-                $currentFile = $filename;
-            } else if ($currentFile !== $filename) {
-                // finish write to file
-                $this->writeEntries($currentFile, $currentFileEntries);
-                $currentFile = $filename;
-                $currentFileEntries = [];
-            }
-
-            $currentFileEntries[$this->extractLangKey($key)] = $message;
+        foreach ($fileGroups->files as $filename => $entries) {
+            $this->writeEntries($filename, $entries);
+            $this->writtenFiles[] = $filename;
         }
 
-        $this->writeEntries($currentFile, $currentFileEntries);
+        $this->removeUnusedFiles();
+    }
 
-        $this->writeJsonEntries();
+    /**
+     * Figure out filenames from keys and map them thereby, figure out new filenames or else assign it to the json file.
+     *
+     * @param $entries
+     * @return object
+     */
+    private function wrapFilenames($entries)
+    {
+        $files = [];
+        $json = [];
+        foreach ($entries as $key => $message) {
+            $fileKey = $this->findFileKey($key);
+
+            if (!$fileKey) {
+                $fileKey = $this->tryExtractFilename($key);
+
+                // can't extract filename so we store it in the json file
+                if (!$fileKey) {
+                    $json[$key] = $message;
+                    continue;
+                }
+            }
+
+            $key = $this->extractLangKey($key, $fileKey);
+            $filename = $this->initialFiles[$fileKey] ?? $fileKey;
+            
+            if (!isset($files[$filename])) {
+                $files[$filename] = [];
+            }
+            
+            $files[$filename][$key] = $message;
+        }
+        
+        return (object)[
+            'json' => $json,
+            'files' => $files,
+        ];
     }
 
     private function sortEntries()
@@ -103,15 +94,14 @@ class ResourceWriter extends Writer
         ksort($this->entries);
     }
 
-    private function isJsonEntry($key)
+    /**
+     * Tries possible keys and checks if a file exits for given key.
+     *
+     * @param $key
+     * @return string|null
+     */
+    private function findFileKey($key)
     {
-        if (strpos($key, '.') === false) {
-            return true;
-        }
-    }
-
-    private function getFileKeyOfSource($key) {
-
         $fileKeyParts = explode($key, '.');
 
         while (true) {
@@ -130,22 +120,23 @@ class ResourceWriter extends Writer
 
         return null;
     }
-
-    private function extractFilename($key)
+    private function tryExtractFilename($key)
     {
         $separatorPos = strpos($key, '.');
 
-        if ($separatorPos === false) {
-            // this comes into the json file
-            return '../' . $this->languageIdentifier . '.json';
+        if ($separatorPos === false || $separatorPos == strlen($key) - 1) {
+            return null; // no file key available
         }
-
 
         return substr($key, 0, strpos($key, '.'));
     }
 
-    private function extractLangKey($key)
+    private function extractLangKey($key, $fileKey = null)
     {
+        if ($fileKey) {
+            return substr($key, strlen($fileKey) + 1);
+        }
+
         $separatorPos = strpos($key, '.');
 
         if ($separatorPos === false) {
@@ -188,9 +179,9 @@ class ResourceWriter extends Writer
         fwrite($f, "];\n");
     }
 
-    private function writeJsonEntries()
+    private function writeJsonEntries($entries)
     {
-        file_put_contents($this->uri . '.json', json_encode($this->jsonEntries, JSON_PRETTY_PRINT));
+        file_put_contents($this->uri . '.json', json_encode($entries, JSON_PRETTY_PRINT));
     }
 
     private function getAllFiles($uri)
@@ -220,5 +211,14 @@ class ResourceWriter extends Writer
                 $fileName = substr($f, $begin, $length);
                 return [str_replace('/', '.', $fileName) => $f];
             });
+    }
+
+    private function removeUnusedFiles()
+    {
+        foreach ($this->initialFiles as $filename) {
+            if (!in_array($filename, $this->writtenFiles)) {
+                unset($filename);
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Symvaro\ArtisanLangUtils\Readers\ResourceFileReader;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
+use Illuminate\Support\Str;
 
 // TODO read with lang.json
 // TODO write lang.json
@@ -65,7 +66,7 @@ class ResourceReaderWriterTest extends TestCase
 
     private function tmpDir()
     {
-        $tmpDirName = sys_get_temp_dir() . '/lang_test_' . str_random();
+        $tmpDirName = sys_get_temp_dir() . '/lang_test_' . Str::random();
 
         mkdir($tmpDirName);
 

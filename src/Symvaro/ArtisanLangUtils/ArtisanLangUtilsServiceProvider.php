@@ -12,7 +12,6 @@ class ArtisanLangUtilsServiceProvider extends ServiceProvider
     {
         $this->commands(Export::class);
         $this->commands(Import::class);
-        $this->commands(ListEntries::class);
     }
 }
 

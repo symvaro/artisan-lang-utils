@@ -7,8 +7,6 @@ use Symvaro\ArtisanLangUtils\Entry;
 
 class ResourceWriter extends Writer
 {
-    private $entries;
-
     private $initialFiles;
     private $writtenFiles;
 
@@ -16,13 +14,39 @@ class ResourceWriter extends Writer
 
     private $languageIdentifier;
     private $jsonOnly = false;
+    
+    private $jsonEntries, $files;
 
     public function open($uri)
     {
         $this->uri = $uri;
         $this->languageIdentifier = Arr::last(explode('/', $uri));
         $this->initialFiles = $this->mapKeysToFiles($this->getAllFiles($this->uri));
-        $this->entries = [];
+        $this->jsonEntries = [];
+        $this->files = [];
+    }
+
+    /**
+     * Extract keys from filenames and map them like:
+     *
+     * [ "subdir.subfile' => "subdir/subfile.php" ]
+     *
+     * @param array $filenames
+     * @return \Illuminate\Support\Collection
+     */
+    private function mapKeysToFiles(array $filenames)
+    {
+        $begin = strlen($this->uri) + 1;
+
+        return collect($filenames)
+            ->mapWithKeys(function ($f) use ($begin) {
+                $length = strlen($f) - $begin;
+                $filename = substr($f, $begin, $length);
+                $fileKeyPart = substr($filename, 0, strlen($filename) - strlen('.php'));
+                $fileKey = str_replace('/', '.', $fileKeyPart);
+
+                return [$fileKey => $filename];
+            });
     }
 
     public function outputJsonOnly()
@@ -33,18 +57,48 @@ class ResourceWriter extends Writer
 
     public function write(Entry $entry)
     {
-        $this->entries[$entry->getKey()] = $entry->getMessage();
+        if ($this->jsonOnly) {
+            $this->addToJson($entry);
+            return;
+        }
+
+        $fileKey = $this->findFileKey($entry->key);
+
+        if (!$fileKey) {
+            $fileKey = $this->extractFileKey($entry->key);
+
+            // can't extract filename so we store it in the json file
+            if (!$fileKey) {
+                $this->addToJson($entry);
+                return;
+            }
+        }
+
+        $this->addToFile($fileKey, $entry);
+    }
+
+    private function addToJson(Entry $entry)
+    {
+        $this->jsonEntries[$entry->key] = $entry->message;
+    }
+
+    private function addToFile($fileKey, Entry $entry)
+    {
+        $key = $this->extractLangKey($entry->key, $fileKey);
+        $filename = $this->initialFiles[$fileKey] ?? ("$fileKey.php");
+
+        if (!isset($this->files[$filename])) {
+            $this->files[$filename] = [];
+        }
+
+        $this->files[$filename][$key] = $entry->message;
     }
 
     public function close()
     {
-        $this->sortEntries();
+        $this->writeJsonEntries();
 
-        $fileGroups = $this->wrapFilenames($this->entries);
-        
-        $this->writeJsonEntries($fileGroups->json);
-
-        foreach ($fileGroups->files as $filename => $entries) {
+        foreach ($this->files as $filename => $entries) {
             $this->writeEntries($filename, $entries);
             $this->writtenFiles[] = $filename;
         }
@@ -52,54 +106,6 @@ class ResourceWriter extends Writer
         $this->removeUnusedFiles();
     }
 
-    /**
-     * Figure out filenames from keys and map them thereby, figure out new filenames or else assign it to the json file.
-     *
-     * @param $entries
-     * @return object
-     */
-    private function wrapFilenames($entries)
-    {
-        $files = [];
-        $json = [];
-        foreach ($entries as $key => $message) {
-            if ($this->jsonOnly) {
-                $json[$key] = $message;
-                continue;
-            }
-
-            $fileKey = $this->findFileKey($key);
-
-            if (!$fileKey) {
-                $fileKey = $this->extractFileKey($key);
-
-                // can't extract filename so we store it in the json file
-                if (!$fileKey) {
-                    $json[$key] = $message;
-                    continue;
-                }
-            }
-
-            $key = $this->extractLangKey($key, $fileKey);
-            $filename = $this->initialFiles[$fileKey] ?? ("$fileKey.php");
-            
-            if (!isset($files[$filename])) {
-                $files[$filename] = [];
-            }
-            
-            $files[$filename][$key] = $message;
-        }
-
-        return (object)[
-            'json' => $json,
-            'files' => $files,
-        ];
-    }
-
-   private function sortEntries()
-    {
-        ksort($this->entries);
-    }
 
     /**
      * Tries possible keys and checks if a file exits for given key.
@@ -109,6 +115,7 @@ class ResourceWriter extends Writer
      */
     private function findFileKey($key)
     {
+        $key = str_replace('/', '.', $key);
         $fileKeyParts = explode('.', $key);
 
         while (true) {
@@ -129,6 +136,7 @@ class ResourceWriter extends Writer
     }
     private function extractFileKey($key)
     {
+        $key = str_replace('/', '.', $key);
         $separatorPos = strpos($key, '.');
 
         if ($separatorPos === false || $separatorPos == strlen($key) - 1) {
@@ -138,7 +146,7 @@ class ResourceWriter extends Writer
         return substr($key, 0, strpos($key, '.'));
     }
 
-    private function extractLangKey($key, $fileKey = null)
+    private function extractLangKey($key, $fileKey)
     {
         if ($fileKey) {
             return substr($key, strlen($fileKey) + 1);
@@ -184,11 +192,11 @@ class ResourceWriter extends Writer
         fwrite($f, "];\n");
     }
 
-    private function writeJsonEntries($entries)
+    private function writeJsonEntries()
     {
         $file = $this->uri . '.json';
-        if (!empty($entries)) {
-            file_put_contents($file, json_encode($entries, JSON_PRETTY_PRINT));
+        if (!empty($this->jsonEntries)) {
+            file_put_contents($file, json_encode($this->jsonEntries, JSON_PRETTY_PRINT));
             return;
         }
         
@@ -212,29 +220,6 @@ class ResourceWriter extends Writer
         }
 
         return $result;
-    }
-
-    /**
-     * Extract keys from filenames and map them like:
-     *
-     * [ "subdir.subfile' => "subdir/subfile.php" ]
-     *
-     * @param array $filenames
-     * @return \Illuminate\Support\Collection
-     */
-    private function mapKeysToFiles(array $filenames)
-    {
-        $begin = strlen($this->uri) + 1;
-
-        return collect($filenames)
-            ->mapWithKeys(function ($f) use ($begin) {
-                $length = strlen($f) - $begin;
-                $filename = substr($f, $begin, $length);
-                $fileKeyPart = substr($filename, 0, strlen($filename) - strlen('.php'));
-                $fileKey = str_replace('/', '.', $fileKeyPart);
-                
-                return [$fileKey => $filename];
-            });
     }
 
     private function removeUnusedFiles()

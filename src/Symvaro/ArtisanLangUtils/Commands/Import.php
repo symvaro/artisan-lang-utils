@@ -4,15 +4,23 @@ namespace Symvaro\ArtisanLangUtils\Commands;
 
 
 use Illuminate\Console\Command;
-use Symvaro\ArtisanLangUtils\Factory;
+use Symvaro\ArtisanLangUtils\Readers\JSONReader;
 use Symvaro\ArtisanLangUtils\Readers\POReader;
-use Symvaro\ArtisanLangUtils\Writers\JSONWriter;
+use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
+use Symvaro\ArtisanLangUtils\Readers\TSVReader;
 use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 class Import extends Command
 {
+    const READERS = [
+        'tsv' => TSVReader::class,
+        'po' => POReader::class,
+        'resource' => ResourceDirReader::class,
+        'json' => JSONReader::class,
+    ];
+    
     protected $signature = 'lang:import 
-        {--f|format=po : Input file format.}
+        {--f|format=tsv : Input file format.}
         {--j|json-only : Input will only be written to the language json}
         {--p|path : Specifies that the language argument is a real path}
         {--l|language=}
@@ -26,14 +34,16 @@ class Import extends Command
             $this->error('language required');
             return;
         }
-        
-        $reader = Factory::createReader($this->option('format'));
 
-        if (!$reader) {
+        $readerClass = self::READERS[$this->option('format')] ?? null;
+
+        if (!$readerClass) {
             $this->errorUnknownFormat();
             return;
         }
-        
+
+        $reader = new $readerClass();
+
         $inFile = $this->argument('input-file');
         
         if (empty($inFile)) {
@@ -41,7 +51,6 @@ class Import extends Command
         }
 
         $reader->open($inFile);
-        $reader->rewind();
 
         $path = resource_path('lang/' . $this->option('language'));
 

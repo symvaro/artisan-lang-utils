@@ -4,19 +4,26 @@ namespace Symvaro\ArtisanLangUtils\Commands;
 
 use App;
 use Illuminate\Console\Command;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
-use Symvaro\ArtisanLangUtils\Factory;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
+use Symvaro\ArtisanLangUtils\Writers\JSONWriter;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
+use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
+use Symvaro\ArtisanLangUtils\Writers\TSVWriter;
 
 class Export extends Command
 {
+    const WRITERS = [
+        'tsv' => TSVWriter::class,
+        'po' => POWriter::class,
+        'resource' => ResourceWriter::class,
+        'json' => JSONWriter::class,
+    ];
+
     protected $signature =
         'lang:export 
         {--l|language= : Language in lang resource directory}
         {--p|path= : Path to file/folder}
-        {--f|format=po : Output file format.}
+        {--f|format=tsv : Output file format.}
         {output-file? : File to write to. If not specified, stdout is used.}';
 
     protected $description = 'Export language resources into given lang file format';
@@ -42,17 +49,17 @@ class Export extends Command
         if ($uri == null) {
             $uri = 'php://output';
         }
-        
-        $writer = Factory::createWriter($this->option('format'));
-        $writer->open($uri);
 
-        if ($writer === null) {
+        $writerClass = self::WRITERS[$this->option('format')] ?? null;
+
+        if ($writerClass === null) {
             $this->errorUnknownFormat();
             return;
         }
 
+        $writer = new $writerClass();
+        $writer->open($uri);
         $this->exportTranslations($path, $writer);
-
         $writer->close();
     }
 
@@ -60,7 +67,7 @@ class Export extends Command
     {
         $error = "Invalid format! Available formats:";
 
-        foreach (Factory::WRITERS as $key => $value) {
+        foreach (self::WRITERS as $key => $value) {
             $error .= "\n  $key";
         }
 

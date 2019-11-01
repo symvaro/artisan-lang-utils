@@ -15,18 +15,25 @@ class POReader extends Reader
     private $char;
 
     private $entryKey, $entryValue;
+    private $entryIndex;
 
     public function open($uri)
     {
         $this->handle = fopen($uri, 'r');
         $this->row = 0;
+        $this->entryIndex = -1;
         $this->readLine();
     }
 
     protected function reset()
     {
+        if ($this->entryIndex === -1) {
+            return;
+        }
+
         rewind($this->handle);
         $this->row = 0;
+        $this->entryIndex = -1;
         $this->readLine();
     }
 
@@ -57,6 +64,7 @@ class POReader extends Reader
      */
     protected function nextEntry()
     {
+        $this->entryIndex += 1;
         $this->entryKey = null;
         $this->entryValue = null;
 

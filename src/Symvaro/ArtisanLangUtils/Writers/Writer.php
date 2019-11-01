@@ -3,7 +3,6 @@
 namespace Symvaro\ArtisanLangUtils\Writers;
 
 use Symvaro\ArtisanLangUtils\Entry;
-use Symvaro\ArtisanLangUtils\StringCollection;
 
 abstract class Writer
 {

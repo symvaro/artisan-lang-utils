@@ -134,6 +134,7 @@ class ResourceWriter extends Writer
 
         return null;
     }
+
     private function extractFileKey($key)
     {
         $key = str_replace('/', '.', $key);
@@ -143,7 +144,27 @@ class ResourceWriter extends Writer
             return null; // no file key available
         }
 
-        return substr($key, 0, strpos($key, '.'));
+        $name = substr($key, 0, strpos($key, '.'));
+
+        if (!$this->isValidFilename($name)) {
+            return null;
+        }
+
+        return $name;
+    }
+
+    private function isValidFilename($name)
+    {
+        if (in_array($name, ['.', '..'])) {
+            return false;
+        }
+
+        // to avoid filenames like '../../.env'
+        if (realpath($name) != $name) {
+            return false;
+        }
+        
+        return preg_match('/^([-\.\w]+)$/', $name) > 0;
     }
 
     private function extractLangKey($key, $fileKey)

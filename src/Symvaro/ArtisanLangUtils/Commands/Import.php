@@ -20,10 +20,11 @@ class Import extends Command
     ];
     
     protected $signature = 'lang:import 
+        {--l|language=}
+        {--p|path : Specifies that the language argument is a real path}
         {--f|format=tsv : Input file format.}
         {--j|json-only : Input will only be written to the language json}
-        {--p|path : Specifies that the language argument is a real path}
-        {--l|language=}
+        {--replace-all : Deletes also those, that are not present in input}
         {input-file? : File to read from, stdin will be used if none is specified}';
 
     protected $description = 'Imports and replaces language strings from various formats for one language.';
@@ -50,9 +51,15 @@ class Import extends Command
             $inFile = 'php://stdin';
         }
 
-        $reader->open($inFile);
-
         $path = resource_path('lang/' . $this->option('language'));
+
+        $reader->open($inFile);
+        $entries = iterator_to_array($reader);
+        $reader->close();
+        
+        if (!$this->option('replace-all')) {
+            $entries = $this->merge($entries, $path);
+        }
 
         $writer = new ResourceWriter();
         
@@ -62,19 +69,28 @@ class Import extends Command
         
         $writer->open($path);
 
-        foreach ($reader as $entry) {
+        foreach ($entries as $entry) {
             $writer->write($entry);
         }
 
         $writer->close();
+    }
+
+    private function merge($entries, $langPath)
+    {
+        $reader = new ResourceDirReader();
+        $reader->open($langPath);
+        $currentEntries = iterator_to_array($reader);
         $reader->close();
+
+        return array_merge($currentEntries, $entries);
     }
 
     private function errorUnknownFormat()
     {
         $error = "Invalid format! Available formats:";
 
-        foreach (Factory::READERS as $key => $value) {
+        foreach (self::READERS as $key => $value) {
             $error .= "\n  $key";
         }
 

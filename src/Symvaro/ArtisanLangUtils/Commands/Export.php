@@ -21,12 +21,12 @@ class Export extends Command
 
     protected $signature =
         'lang:export 
-        {--l|language= : Language in lang resource directory}
+        {--l|language= : Language in lang resource directory.}
         {--p|path= : Path to file/folder}
         {--f|format=tsv : Output file format.}
         {output-file? : File to write to. If not specified, stdout is used.}';
 
-    protected $description = 'Export language resources into given lang file format';
+    protected $description = 'Export language resources into given lang file format. If no language or path is specified, the default language will be used';
 
     public function handle()
     {
@@ -35,8 +35,7 @@ class Export extends Command
 
         if ((!empty($path) && !empty($language))
                 || (empty($path) && empty($language))) {
-            $this->error('Either language or path must be used.');
-            return;
+            $language = App::getLocale();
         }
 
 

@@ -35,6 +35,7 @@ class ListLanguages extends Command
             ->filter(function ($p) use ($defaultLocale) {
                 return $p !== 'vendor' && $p !== $defaultLocale;
             })
+            ->sort()
             ->prepend($defaultLocale);
 
         foreach ($langFiles as $file) {

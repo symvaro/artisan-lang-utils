@@ -3,6 +3,7 @@
 namespace Symvaro\ArtisanLangUtils\Commands;
 
 
+use App;
 use Illuminate\Console\Command;
 use Symvaro\ArtisanLangUtils\Readers\JSONReader;
 use Symvaro\ArtisanLangUtils\Readers\POReader;
@@ -21,7 +22,7 @@ class Import extends Command
     
     protected $signature = 'lang:import 
         {--l|language=}
-        {--p|path : Specifies that the language argument is a real path}
+        {--p|path : Path to the language folder}
         {--f|format=tsv : Input file format.}
         {--j|json-only : Input will only be written to the language json}
         {--replace-all : Deletes also those, that are not present in input}
@@ -31,9 +32,14 @@ class Import extends Command
 
     public function handle()
     {
-        if (empty($this->option('language'))) {
-            $this->error('language required');
-            return;
+        $path = $this->option('path');
+
+        if (empty($path)) {
+            $language = $this->option('language');
+            if (empty($language)) {
+                $language = App::getLocale();
+            }
+            $path = App::langPath() . "/$language";
         }
 
         $readerClass = self::READERS[$this->option('format')] ?? null;
@@ -50,8 +56,6 @@ class Import extends Command
         if (empty($inFile)) {
             $inFile = 'php://stdin';
         }
-
-        $path = resource_path('lang/' . $this->option('language'));
 
         $reader->open($inFile);
         $entries = iterator_to_array($reader);

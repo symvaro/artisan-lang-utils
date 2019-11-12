@@ -4,98 +4,84 @@ namespace Symvaro\ArtisanLangUtils\Commands;
 
 use App;
 use Illuminate\Console\Command;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
-use Symvaro\ArtisanLangUtils\Factory;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
+use Symvaro\ArtisanLangUtils\Writers\JSONWriter;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
+use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
+use Symvaro\ArtisanLangUtils\Writers\TSVWriter;
 
 class Export extends Command
 {
+    const WRITERS = [
+        'tsv' => TSVWriter::class,
+        'po' => POWriter::class,
+        'resource' => ResourceWriter::class,
+        'json' => JSONWriter::class,
+    ];
+
     protected $signature =
         'lang:export 
-        {language : Language in lang resource directory}
-        {out-file? : File to write to. If not specified, stdout is used.}
-        {--format=po : Output file format.}';
+        {--l|language= : Language in lang resource directory.}
+        {--p|path= : Path to file/folder}
+        {--f|format=tsv : Output file format.}
+        {output-file? : File to write to. If not specified, stdout is used.}';
 
-    protected $description = 'Export language resources into common lang file formats';
-
-    private $writer;
+    protected $description = 'Export language resources into given lang file format. If no language or path is specified, the default language will be used';
 
     public function handle()
     {
-        if (!$this->validateLanguagePath()) {
-            $this->comment('Could not find given language resource directory: "' .
-                App::langPath() . '/' . $this->argument('language')
-                . '"'
-            );
+        $language = $this->option('language');
+        $path = $this->option('path');
 
-            return;
+        if ((!empty($path) && !empty($language))
+                || (empty($path) && empty($language))) {
+            $language = App::getLocale();
         }
 
-        $uri = $this->argument('out-file');
+
+        if ($language) {
+            $path = App::langPath() . "/$language";
+        }
+
+        $uri = $this->argument('output-file');
 
         if ($uri == null) {
             $uri = 'php://output';
         }
-        
-        $this->writer = Factory::createWriter($this->option('format'), $uri);
 
-        if ($this->writer === null) {
+        $writerClass = self::WRITERS[$this->option('format')] ?? null;
+
+        if ($writerClass === null) {
             $this->errorUnknownFormat();
             return;
         }
 
-        $this->exportTranslations();
-
-        $this->writer->close();
-    }
-
-    private function validateLanguagePath()
-    {
-        $langPath = App::langPath();
-        $realPath = $this->getLangPath();
-
-        if (!$realPath) {
-            return false;
-        }
-        
-        return strncmp($langPath, $realPath, strlen($langPath)) === 0;
-    }
-
-    private function getLangPath()
-    {
-        $language = $this->argument('language');
-
-        if ($language == null) {
-            return false;
-        }
-
-        return realpath(App::langPath() . '/' . $language);
+        $writer = new $writerClass();
+        $writer->open($uri);
+        $this->exportTranslations($path, $writer);
+        $writer->close();
     }
 
     private function errorUnknownFormat()
     {
         $error = "Invalid format! Available formats:";
 
-        foreach (Factory::WRITERS as $key => $value) {
+        foreach (self::WRITERS as $key => $value) {
             $error .= "\n  $key";
         }
 
         $this->info($error);
     }
 
-    private function exportTranslations()
+    private function exportTranslations($path, $writer)
     {
-        $path = $this->getLangPath();
+        $reader = new ResourceDirReader();
+        $reader->open($path);
 
-        $reader = new ResourceDirReader($path);
-        $reader->rewind();
-
-        while ($reader->valid()) {
-            $this->writer->write($reader->currentEntry());
-
-            $reader->next();
+        foreach ($reader as $entry) {
+            $writer->write($entry);
         }
+
+        $reader->close();
     }
 }

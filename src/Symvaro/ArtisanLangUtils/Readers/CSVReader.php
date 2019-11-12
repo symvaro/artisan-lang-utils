@@ -10,7 +10,7 @@ class CsvReader extends Reader
 {
     private $handle;
 
-    public function __construct($uri)
+    public function open($uri)
     {
         $this->handle = fopen($uri, 'r');
     }

@@ -3,26 +3,17 @@
 namespace Symvaro\ArtisanLangUtils\Writers;
 
 use Symvaro\ArtisanLangUtils\Entry;
-use Symvaro\ArtisanLangUtils\StringCollection;
 
 abstract class Writer
 {
-    public function __construct($uri)
-    {
-        $this->open($uri);
-    }
-
     public abstract function open($uri);
 
     public abstract function write(Entry $entry);
 
-    /**
-     * @param StringCollection|\Traversable $strings
-     */
-    public function writeAll($strings)
+    public function writeAll($entries)
     {
-        foreach ($strings as $key => $message) {
-            $this->write(new Entry($key, $message));
+        foreach ($entries as $entry) {
+            $this->write($entry);
         }
     }
 

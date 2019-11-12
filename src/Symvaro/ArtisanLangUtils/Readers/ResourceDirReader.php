@@ -5,7 +5,6 @@ namespace Symvaro\ArtisanLangUtils\Readers;
 use Illuminate\Filesystem\Filesystem;
 use Exception;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Symvaro\ArtisanLangUtils\Entry;
 
 class ResourceDirReader extends Reader
@@ -21,16 +20,22 @@ class ResourceDirReader extends Reader
 
     private $currentFileReader;
 
-    public function __construct($uri)
+    private $jsonParsed = false;
+
+    public function __construct()
     {
         $this->filesystem = new Filesystem();
+    }
 
+    public function open($uri)
+    {
         if (!$this->filesystem->isDirectory($uri)) {
-            $uri = resource_path('lang/' . $uri);
-        }
 
-        if (!$this->filesystem->isDirectory($uri)) {
-            throw new Exception('please specify the resource lang dir');
+            $jsonPath = realpath($uri . '.json');
+
+            if ($jsonPath === false) {
+                $uri = resource_path('lang/' . $uri);
+            }
         }
 
         $this->langDirPath = $uri;
@@ -42,8 +47,17 @@ class ResourceDirReader extends Reader
 
     protected function reset()
     {
-        $this->files = $this->filesystem->allFiles($this->langDirPath);
+        $this->currentFileReader = new ResourceFileReader();
+
+        if ($this->filesystem->isDirectory($this->langDirPath)) {
+            $this->files = $this->filesystem->allFiles($this->langDirPath);
+        }
+        else {
+            $this->files = [];
+        }
+
         $this->currentFilePos = 0;
+        $this->jsonParsed = false;
 
         $this->loadNextFile();
     }
@@ -51,28 +65,50 @@ class ResourceDirReader extends Reader
     private function loadNextFile()
     {
         if (!isset($this->files[$this->currentFilePos])) {
-            $this->currentFileReader = null;
+            $this->currentFileReader = $this->tryLoadJson();
             return;
         }
 
         $nextFilePath = $this->files[$this->currentFilePos]->getRealPath();
 
-        $this->currentFileReader = new ResourceFileReader($nextFilePath);
+        $this->currentFileReader->open($nextFilePath);
         $this->currentFileReader->rewind();
 
-
-        $langDirPathStrlen = strlen($this->langDirPath) - strlen($this->language);
+        $langDirPathStrlen = strlen($this->langDirPath) + 1;
 
         $this->currentFilePos += 1;
-        $this->currentFilePrefix = substr(
-            $nextFilePath,
-            $langDirPathStrlen,
-            strlen($nextFilePath) - $langDirPathStrlen - strlen('.php')
-        );
+        $this->currentFilePrefix = str_replace('/', '.', substr(
+                $nextFilePath,
+                $langDirPathStrlen,
+                strlen($nextFilePath) - $langDirPathStrlen - strlen('.php')
+            )) . '.';
+    }
+
+    private function tryLoadJson()
+    {
+        if ($this->jsonParsed) {
+            return null;
+        }
+
+        $this->jsonParsed = true;
+
+        $jsonPath = $this->langDirPath . '.json';
+
+        if (realpath($jsonPath) === false) {
+            return null;
+        }
+
+        $reader = new JSONReader();
+        $reader->open($jsonPath);
+        $reader->rewind();
+
+        $this->currentFilePrefix = '';
+
+        return $reader;
     }
 
     /**
-     * @return \Symvaro\ArtisanLangUtils\Entry | null
+     * @return Entry | null
      */
     protected function nextEntry()
     {
@@ -84,11 +120,8 @@ class ResourceDirReader extends Reader
                 continue;
             }
 
-            $value = $this->currentFileReader->current();
-
-            if (is_string($value)) {
-                $entry = new Entry($this->currentFilePrefix . '.' . $this->currentFileReader->key(), $value);
-            }
+            $entry = $this->currentFileReader->current();
+            $entry->key = $this->currentFilePrefix . $entry->key;
 
             $this->currentFileReader->next();
         }

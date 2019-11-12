@@ -15,17 +15,27 @@ class ResourceFileReader extends Reader
 
     private $entries;
 
-    public function __construct($uri)
+    public function open($uri)
     {
         $this->filesystem = new Filesystem();
+        $this->entries = $this->fetchEntries($uri);
+    }
 
-        $fileContents = $this->filesystem->getRequire($uri);
+    static private function fetchEntries($uri)
+    {
+        // ob_start and the clean afterwards makes sure, that there won't be any output upon require.
+        // Otherwise this can result in unwanted output, when e.g. something is written before the
+        // <?php tag. I happened to have a lang file, which had an empty line before the php tag. Which
+        // broke the PO format in the end.
+        ob_start();
+        $fileContents = require $uri;
+        ob_clean();
 
-        $this->entries = Collection::make(Arr::dot($fileContents))->getIterator();
+        return Collection::make(Arr::dot($fileContents))->getIterator();
     }
 
     /**
-     * @return \Symvaro\ArtisanLangUtils\Entry | null
+     * @return Entry | null
      */
     protected function nextEntry()
     {
@@ -33,17 +43,17 @@ class ResourceFileReader extends Reader
             return null;
         }
 
-        $entry = new Entry($this->entries->key(), $this->entries->current());
-
+        $key = $this->entries->key();
+        $message = $this->entries->current();
         $this->entries->next();
 
-        return $entry;
+        if ($message === []) {
+            return null;
+        }
+
+        return new Entry($key, $message);
     }
 
-    /**
-     * Resets the reader, so that nextEntry will read the first entry again.
-     * @return void
-     */
     protected function reset()
     {
         $this->entries->rewind();

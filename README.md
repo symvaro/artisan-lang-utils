@@ -48,6 +48,12 @@ It will read from stdin, if no filename is specified. There is also
 the `--replace-all` option, which will remove language strings,
 if they are not present in the import file.
 
+## Edit
+
+Available commands to ease editing of language strings:
+
+ * Removing (`lang:remove {?key}`)
+
 ## Examples
 
 The commands can be combined with common shell utils. For example to

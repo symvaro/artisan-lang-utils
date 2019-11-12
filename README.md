@@ -18,15 +18,6 @@ and require:
     "symvaro/artisan-lang-utils": "dev-master"
 ```
 
-Then add the following service provider to config/app.php
-
-```
-    'providers' => [
-        ...
-        Symvaro\ArtisanLangUtils\ArtisanLangUtilsServiceProvider::class,
-    ]
-```
-
 # Use
 
 __Warning:__ The artisan lang commands will alter the language files

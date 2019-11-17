@@ -1,5 +1,6 @@
 {
     "name": "symvaro/artisan-lang-utils",
+    "license": "MIT",
     "require": {
         "laravel/framework": "^5.1|^6.0",
         "ext-json": "*"
@@ -11,7 +12,7 @@
     "authors": [
         {
             "name": "Armin Preiml",
-            "email": "apreiml@strohwolke.at"
+            "email": "armin.preiml@symvaro.com"
         }
     ],
 

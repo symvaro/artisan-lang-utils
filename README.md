@@ -3,19 +3,8 @@ language resources.
 
 # Install
 
-In composer.json add the following to repositories:
-
 ```
-    "repositories": [{ 
-        "type": "vcs", 
-        "url":  "git@github.com:symvaro/artisan-lang-utils.git" 
-    }]
-```
-
-and require:
-
-```
-    "symvaro/artisan-lang-utils": "dev-master"
+composer require --dev symvaro/artisan-lang-utils
 ```
 
 # Use

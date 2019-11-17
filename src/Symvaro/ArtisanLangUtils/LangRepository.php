@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class LangRepository
 {
-    public function getLocales(): Collection
+    public function getLanguages(): Collection
     {
         $langPath = App::langPath();
         $langFiles = glob("$langPath/*");
@@ -33,7 +33,17 @@ class LangRepository
         return $languages;
     }
 
-    public function getPathToLocale($locale)
+    public function getDefaultLanguage()
+    {
+        return App::getLocale();
+    }
+
+    public function getFallbackLanguage()
+    {
+        return config('app.fallback_locale');
+    }
+
+    public function getPathToLanguage($locale)
     {
         return App::langPath() . "/$locale";
     }

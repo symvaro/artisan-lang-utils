@@ -16,17 +16,19 @@ class ListLanguages extends Command
 
     public function handle()
     {
-        $locales = (new LangRepository())->getLocales();
-        $defaultLocale = App::getLocale();
+        $languageRepository = new LangRepository();
 
-        $locales
-            ->filter(function ($locale) use ($defaultLocale) {
-                return $locale !== $defaultLocale;
+        $languages = $languageRepository->getLanguages();
+        $defaultLanguage = $languageRepository->getDefaultLanguage();
+
+        $languages
+            ->filter(function ($language) use ($defaultLanguage) {
+                return $language !== $defaultLanguage;
             })
-            ->prepend($defaultLocale);
+            ->prepend($defaultLanguage);
 
-        foreach ($locales as $locale) {
-            $this->info($locale);
+        foreach ($languages as $language) {
+            $this->info($language);
         }
     }
 }

@@ -26,10 +26,10 @@ class Remove extends Command
         $key = $this->argument('key');
         $keys = $key ? [$key] : $this->loadKeysFromStdin();
 
-        $locales = $this->langRepository->getLocales();
+        $locales = $this->langRepository->getLanguages();
 
         foreach ($locales as $locale) {
-            $this->removeKeysFromLocale($locale, $keys);
+            $this->removeKeysFromLanguage($locale, $keys);
         }
     }
 
@@ -54,9 +54,9 @@ class Remove extends Command
         return $keys;
     }
 
-    private function removeKeysFromLocale(string $locale, array $keys): bool
+    private function removeKeysFromLanguage(string $language, array $keys)
     {
-        $path = $this->langRepository->getPathToLocale($locale);
+        $path = $this->langRepository->getPathToLanguage($language);
 
         $reader = new ResourceDirReader();
         $reader->open($path);

@@ -23,7 +23,7 @@ class Export extends Command
         'lang:export 
         {--l|language= : Language in lang resource directory.}
         {--p|path= : Path to file/folder}
-        {--f|format=tsv : Output file format.}
+        {--f|format=tsv : Output file format. Currently supported: tsv/po/json/resource whereas resource a folder like a laravel lang folder.}
         {output-file? : File to write to. If not specified, stdout is used.}';
 
     protected $description = 'Export language resources into given lang file format. If no language or path is specified, the default language will be used';

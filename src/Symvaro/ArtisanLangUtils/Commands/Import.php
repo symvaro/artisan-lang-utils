@@ -23,7 +23,7 @@ class Import extends Command
     protected $signature = 'lang:import 
         {--l|language=}
         {--p|path : Path to the language folder}
-        {--f|format=tsv : Input file format.}
+        {--f|format=tsv : Input file format. Currently supported: tsv/po/json/resource whereas resource a folder like a laravel lang folder.}
         {--j|json-only : Input will only be written to the language json}
         {--replace-all : Deletes also those, that are not present in input}
         {input-file? : File to read from, stdin will be used if none is specified}';

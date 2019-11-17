@@ -21,26 +21,31 @@ and require:
 # Use
 
 __Warning:__ The artisan lang commands will alter the language files
-when used for editing or import. That means every content except
-keys and values will be removed (e.g. comments), variables will be
-replaced with their values and nested array structures will be flattened.
-Use these tools only in combination with a VCS.
+when used for editing or import. That means that:
+ 
+ * every content except keys and values will be removed (e.g. comments), 
+ * variables will be replaced with their values and 
+ * nested array structures will be flattened.
+ 
+Therefore it's recommended to use these tools only in combination with a VCS!
 
-## Export
+## Export/Import
 
 To export the languages strings in the supported formats use the command like:
 
-```sh
+```
 php artisan lang:export --language=en --format=po filename.po
 ```
 
-If the filename is omitted, stdout will be used.
-
-## Import
+If the filename is omitted, stdout will be used and if no language parameter is specified, the
+default language will be used. The following formats are currently supported: tsv (default), 
+json, po and resource, where resource is a laravel lang folder. The tsv format contains 
+a tab separated key message pair for every row. The control characters `\n, \t, \\, \r\n` are
+escaped with `\ `.
 
 The import command line api is similarly structured like the export.
 
-```sh
+```
 php artisan lang:import --language=en --format=po filename
 ```
 
@@ -52,11 +57,12 @@ if they are not present in the import file.
 
 Available commands to ease editing of language strings:
 
+ * Add or replace (`lang:add {--l|language=} {?key}`)
  * Removing (`lang:remove {?key}`)
 
 ## Examples
 
-The commands can be combined with common shell utils. For example to
+The commands can be combined with common shell utils. The tsv format is especially supporting this. For example to
 __list all non unique messages__ you can use this:
 
 ```sh

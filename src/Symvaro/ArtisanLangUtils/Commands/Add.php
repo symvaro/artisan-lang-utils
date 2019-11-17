@@ -12,12 +12,11 @@ use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 class Add extends Command
 {
-
     protected $signature = 'lang:add 
         {--l|language= : If no language is chosen, a message for the default and fallback language will be asked.}
         {key? : If no key is specified, key will be asked for.}';
 
-    protected $description = 'Adds a message.';
+    protected $description = 'Adds a message using your $EDITOR if set.';
 
     /** @var LangRepository */
     private $langRepository;

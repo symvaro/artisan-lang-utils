@@ -8,7 +8,7 @@ In composer.json add the following to repositories:
 ```
     "repositories": [{ 
         "type": "vcs", 
-        "url":  "git@git.symvaro.com:dev/artisan-lang-utils.git" 
+        "url":  "git@github.com:symvaro/artisan-lang-utils.git" 
     }]
 ```
 
@@ -72,3 +72,8 @@ __list all non unique messages__ you can use this:
     | grep -vE "^[ ]*1"
 ```
 
+# Contributing
+
+This library will only consist of sound tools to import/export and help editing your language files in the command
+line. Feature requests or contributions out of this scope will not be accepted. Test cases for your special
+cases or bugs are very appreciated.

@@ -63,7 +63,6 @@ class ResourceWriter extends Writer
         }
 
         $fileKey = $this->findFileKey($entry->key);
-
         if (!$fileKey) {
             $fileKey = $this->extractFileKey($entry->key);
 
@@ -156,11 +155,6 @@ class ResourceWriter extends Writer
     private function isValidFilename($name)
     {
         if (in_array($name, ['.', '..'])) {
-            return false;
-        }
-
-        // to avoid filenames like '../../.env'
-        if (realpath($name) != $name) {
             return false;
         }
         

@@ -21,8 +21,6 @@ class Add extends Command
     /** @var LangRepository */
     private $langRepository;
 
-    private $fallbackLanguage = false;
-
     public function handle()
     {
         $this->langRepository = new LangRepository();
@@ -33,13 +31,13 @@ class Add extends Command
         $language = $this->option('language');
         if (!$language) {
             $language = $this->langRepository->getDefaultLanguage();
-            $this->fallbackLanguage = $this->langRepository->getFallbackLanguage();
+            $fallbackLanguage = $this->langRepository->getFallbackLanguage();
         }
         
         $this->askForMessage($key, $language);
 
-        if ($this->fallbackLanguage !== false) {
-            $this->askForMessage($key, $this->fallbackLanguage);
+        if (isset($fallbackLanguage) && $fallbackLanguage !== $language) {
+            $this->askForMessage($key, $fallbackLanguage);
         }
 
     }

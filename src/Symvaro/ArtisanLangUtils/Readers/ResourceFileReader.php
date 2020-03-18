@@ -1,23 +1,17 @@
 <?php
 
-
 namespace Symvaro\ArtisanLangUtils\Readers;
 
-
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Symvaro\ArtisanLangUtils\Entry;
 
 class ResourceFileReader extends Reader
 {
-    private $filesystem;
-
     private $entries;
 
     public function open($uri)
     {
-        $this->filesystem = new Filesystem();
         $this->entries = $this->fetchEntries($uri);
     }
 
@@ -29,7 +23,7 @@ class ResourceFileReader extends Reader
         // broke the PO format in the end.
         ob_start();
         $fileContents = require $uri;
-        ob_clean();
+        ob_end_clean();
 
         return Collection::make(Arr::dot($fileContents))->getIterator();
     }

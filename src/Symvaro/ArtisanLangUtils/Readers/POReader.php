@@ -19,7 +19,12 @@ class POReader extends Reader
 
     public function open($uri)
     {
-        $this->handle = fopen($uri, 'r');
+        $this->openResource(fopen($uri, 'r'));
+    }
+
+    public function openResource($handle)
+    {
+        $this->handle = $handle;
         $this->row = 0;
         $this->entryIndex = -1;
         $this->readLine();

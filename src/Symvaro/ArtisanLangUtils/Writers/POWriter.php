@@ -13,12 +13,15 @@ class POWriter extends Writer
         $this->handle = fopen($uri, 'w');
     }
 
+    function openResource($handle)
+    {
+        $this->handle = $handle;
+    }
+
     function write(Entry $entry)
     {
         $message = str_replace('"', '\\"', $entry->getMessage());
-
         $message = str_replace("\n", "\\n\"\n\"", $message);
-
         fputs(
             $this->handle,
             "\n" .

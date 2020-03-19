@@ -5,6 +5,7 @@ namespace Symvaro\ArtisanLangUtils\Commands;
 
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Symvaro\ArtisanLangUtils\Entry;
 use Symvaro\ArtisanLangUtils\LangRepository;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
@@ -12,7 +13,7 @@ use Symvaro\ArtisanLangUtils\Writers\ResourceWriter;
 
 class Add extends Command
 {
-    protected $signature = 'lang:add 
+    protected $signature = 'lang:add
         {--l|language= : If no language is chosen, a message for the default and fallback language will be asked.}
         {key? : If no key is specified, key will be asked for.}';
 
@@ -33,7 +34,7 @@ class Add extends Command
             $language = $this->langRepository->getDefaultLanguage();
             $fallbackLanguage = $this->langRepository->getFallbackLanguage();
         }
-        
+
         $this->askForMessage($key, $language);
 
         if (isset($fallbackLanguage) && $fallbackLanguage !== $language) {
@@ -68,9 +69,14 @@ class Add extends Command
         system("$editor $tmp > `tty`");
         $message = file_get_contents($tmp);
         unlink($tmp);
-        
+
         if (empty($message)) {
             return null;
+        }
+
+        // using an editor like here always adds an additional \n to end of string
+        if (Str::endsWith($message, "\n")) {
+            $message = substr($message, 0, strlen($message)-2);
         }
 
         return $message;

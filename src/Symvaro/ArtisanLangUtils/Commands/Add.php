@@ -76,7 +76,7 @@ class Add extends Command
 
         // using an editor like here always adds an additional \n to end of string
         if (Str::endsWith($message, "\n")) {
-            $message = substr($message, 0, strlen($message)-2);
+            $message = substr($message, 0, strlen($message)-1);
         }
 
         return $message;

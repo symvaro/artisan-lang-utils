@@ -2,7 +2,7 @@
     "name": "symvaro/artisan-lang-utils",
     "license": "MIT",
     "require": {
-        "laravel/framework": "^5.1|^6.0|^7.0|^8.0",
+        "laravel/framework": "^5.1|^6.0|^7.0|^8.0|^9.0",
         "ext-json": "*"
     },
     "require-dev": {

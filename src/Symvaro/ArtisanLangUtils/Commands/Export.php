@@ -24,6 +24,7 @@ class Export extends Command
         {--l|language= : Language in lang resource directory.}
         {--p|path= : Path to file/folder}
         {--f|format=tsv : Output file format. Currently supported: tsv/po/json/resource whereas resource a folder like a laravel lang folder.}
+        {--d|diff= : Output language strings that are missing in the language given by --diff, compared to the language given by --language or --path}
         {output-file? : File to write to. If not specified, stdout is used.}';
 
     protected $description = 'Export language resources into given lang file format. If no language or path is specified, the default language will be used';
@@ -37,7 +38,6 @@ class Export extends Command
                 || (empty($path) && empty($language))) {
             $language = App::getLocale();
         }
-
 
         if ($language) {
             $path = App::langPath() . "/$language";
@@ -56,9 +56,14 @@ class Export extends Command
             return;
         }
 
+        $diff = $this->option('diff');
+        if ($diff) {
+            $diffKeys = $this->loadDiffKeys(App::langPath() . "/$diff");
+        }
+
         $writer = new $writerClass();
         $writer->open($uri);
-        $this->exportTranslations($path, $writer);
+        $this->exportTranslations($path, $writer, $diffKeys ?? []);
         $writer->close();
     }
 
@@ -73,15 +78,31 @@ class Export extends Command
         $this->info($error);
     }
 
-    private function exportTranslations($path, $writer)
+    private function exportTranslations($path, $writer, $excludeKeys = [])
     {
         $reader = new ResourceDirReader();
         $reader->open($path);
 
         foreach ($reader as $entry) {
+            if ($excludeKeys[$entry->getKey()] ?? false) {
+                continue;
+            }
             $writer->write($entry);
         }
 
         $reader->close();
+    }
+
+    private function loadDiffKeys($path)
+    {
+        $keys = [];
+        $reader = new ResourceDirReader();
+        $reader->open($path);
+        foreach ($reader as $entry) {
+            $keys[$entry->getKey()] = true;
+        }
+        $reader->close();
+
+        return $keys;
     }
 }

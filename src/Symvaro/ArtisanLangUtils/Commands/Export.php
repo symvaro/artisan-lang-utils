@@ -22,7 +22,7 @@ class Export extends Command
     protected $signature =
         'lang:export 
         {--l|language= : Language in lang resource directory.}
-        {--p|path= : Path to file/folder}
+        {--p|path= : Path to the language file/folder.}
         {--f|format=tsv : Output file format. Currently supported: tsv/po/json/resource whereas resource a folder like a laravel lang folder.}
         {--d|diff= : Output language strings that are missing in the language given by --diff, compared to the language given by --language or --path}
         {output-file? : File to write to. If not specified, stdout is used.}';
@@ -34,8 +34,12 @@ class Export extends Command
         $language = $this->option('language');
         $path = $this->option('path');
 
-        if ((!empty($path) && !empty($language))
-                || (empty($path) && empty($language))) {
+        if (!blank($language) && !blank($path)) {
+            $this->error("--language and --path can not be provided at the same time");
+            return 1;
+        }
+
+        if ($path === null && $language === null) {
             $language = App::getLocale();
         }
 
@@ -53,7 +57,7 @@ class Export extends Command
 
         if ($writerClass === null) {
             $this->errorUnknownFormat();
-            return;
+            return 1;
         }
 
         $diff = $this->option('diff');
@@ -65,6 +69,8 @@ class Export extends Command
         $writer->open($uri);
         $this->exportTranslations($path, $writer, $diffKeys ?? []);
         $writer->close();
+
+        return 0;
     }
 
     private function errorUnknownFormat()

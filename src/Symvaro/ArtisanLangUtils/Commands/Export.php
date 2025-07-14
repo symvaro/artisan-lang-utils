@@ -2,8 +2,9 @@
 
 namespace Symvaro\ArtisanLangUtils\Commands;
 
-use App;
+use Illuminate\Support\Facades\App;
 use Illuminate\Console\Command;
+use Symvaro\ArtisanLangUtils\LangRepository;
 use Symvaro\ArtisanLangUtils\Readers\ResourceDirReader;
 use Symvaro\ArtisanLangUtils\Writers\JSONWriter;
 use Symvaro\ArtisanLangUtils\Writers\POWriter;
@@ -21,6 +22,7 @@ class Export extends Command
 
     protected $signature =
         'lang:export 
+        {--a|all : Export all strings of all languages. Not every format supports this method.}
         {--l|language= : Language in lang resource directory.}
         {--p|path= : Path to the language file/folder.}
         {--f|format=tsv : Output file format. Currently supported: tsv/po/json/resource whereas resource a folder like a laravel lang folder.}
@@ -31,8 +33,13 @@ class Export extends Command
 
     public function handle()
     {
-        $language = $this->option('language');
         $path = $this->option('path');
+
+        if ($this->option('all')) {
+            return $this->all($path);
+        }
+
+        $language = $this->option('language');
 
         if (!blank($language) && !blank($path)) {
             $this->error("--language and --path can not be provided at the same time");
@@ -111,4 +118,38 @@ class Export extends Command
 
         return $keys;
     }
+
+    private function all($path): int
+    {
+        if ($this->option('format') !== 'json') {
+            $this->error('only json implemented for this mode');
+            return 1;
+        }
+
+        $path = $path ?? App::langPath();
+
+        $languageRepository = new LangRepository($path);
+        $languages = $languageRepository->getLanguages();
+
+        $allKeys = [];
+
+        foreach ($languages as $lang) {
+            $reader = new ResourceDirReader();
+            $reader->open($languageRepository->getPathToLanguage($lang));
+
+            foreach ($reader as $entry) {
+                if (!isset($allKeys[$entry->key])) {
+                    $allKeys[$entry->key] = [];
+                }
+
+                $allKeys[$entry->key][$lang] = $entry->message;
+            }
+
+            $reader->close();
+        }
+
+        echo json_encode($allKeys, JSON_PRETTY_PRINT);
+        return 0;
+    }
+
 }

@@ -3,16 +3,22 @@
 
 namespace Symvaro\ArtisanLangUtils;
 
-use App;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class LangRepository
 {
+    private $path;
+
+    public function __construct($path = null)
+    {
+        $this->path = $path ?? App::langPath();
+    }
+
     public function getLanguages(): Collection
     {
-        $langPath = App::langPath();
-        $langFiles = glob("$langPath/*");
+        $langFiles = glob("$this->path/*");
 
         $languages = collect($langFiles)
             ->map(function ($p)  {
@@ -45,6 +51,6 @@ class LangRepository
 
     public function getPathToLanguage($locale)
     {
-        return App::langPath() . "/$locale";
+        return "$this->path/$locale";
     }
 }
